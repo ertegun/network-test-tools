@@ -130,19 +130,29 @@ export default function PortTest() {
       </Alert>
       {ctx && <ContextBar ctx={ctx} />}
       <Card title={t('portTest.title')}>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
-          <div className="md:col-span-2">
+        {/* Alanlar kutularının alt kenarına hizalanır (Select etiketi kutunun üstünde durur);
+            pencere daralınca taşmadan alt satıra kayar. */}
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-0 flex-[2_1_16rem]">
             <Input label={t('portTest.target')} value={target} onChange={setTarget} />
           </div>
-          <Select<PortSource>
-            label={t('portTest.portSource')}
-            value={source}
-            onChange={setSource}
-            options={(['custom', 'top100', 'web', 'mail', 'remote', 'database'] as PortSource[]).map((v) => ({ value: v, label: t(`presets.${v}`) }))}
-          />
-          <Input label={t('portTest.ports')} value={ports} onChange={setPorts} disabled={source !== 'custom'} />
-          <Input label={t('portTest.timeout')} value={timeoutMs} onChange={setTimeoutMs} type="number" />
-          <Input label={t('portTest.concurrency')} value={concurrency} onChange={setConcurrency} type="number" />
+          <div className="min-w-0 flex-[1_1_11rem]">
+            <Select<PortSource>
+              label={t('portTest.portSource')}
+              value={source}
+              onChange={setSource}
+              options={(['custom', 'top100', 'web', 'mail', 'remote', 'database'] as PortSource[]).map((v) => ({ value: v, label: t(`presets.${v}`) }))}
+            />
+          </div>
+          <div className="min-w-0 flex-[1_1_9rem]">
+            <Input label={t('portTest.ports')} value={ports} onChange={setPorts} disabled={source !== 'custom'} />
+          </div>
+          <div className="min-w-0 flex-[1_1_8rem]">
+            <Input label={t('portTest.timeout')} value={timeoutMs} onChange={setTimeoutMs} type="number" />
+          </div>
+          <div className="min-w-0 flex-[1_1_12rem]">
+            <Input label={t('portTest.concurrency')} value={concurrency} onChange={setConcurrency} type="number" />
+          </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
           {scanId ? (

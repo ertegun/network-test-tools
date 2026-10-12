@@ -272,4 +272,6 @@ Fazlar sırayla ilerler; bir sonraki faza kapıdaki koşul sağlanınca geçilir
 - Sistem ayarını değiştiren her işlem yedekli, `audit.log`'a yazılır (userData).
 - Arayüz metni koda yazılmaz; TR ve EN JSON'larına aynı anahtarla eklenir (test kontrol eder).
 - Material Tailwind bileşenleri yalnızca `components/ui.tsx` sarmalayıcıları üzerinden kullanılır.
+- **Responsif:** her yeni/değişen ekran daralan pencerede kullanılabilir olmalı (varsayılan 1280 px'ten `minWidth` 960 px'e kadar): taşma, üst üste binme ve sayfada yatay kaydırma yok; sığmayan alan alt satıra kayar. Bu kontrol (TR ve EN metinle) yapılmadan iş bitmiş sayılmaz.
+- Form satırları `flex flex-wrap items-end` + alan başına `min-w-0 flex-[büyüme_küçülme_taban]` ile kurulur (`Select` etiketi kutunun üstünde durduğu için `items-end`).
 - Kendiliğinden yapılan tek dış istek public IP sorgusudur (ayarlardan kapatılabilir).

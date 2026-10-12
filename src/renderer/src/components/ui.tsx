@@ -96,7 +96,9 @@ export function Input({ onChange, className = '', ...p }: InputProps) {
       onChange={(e) => onChange(e.target.value)}
       className={`dark:text-gray-100 ${className}`}
       labelProps={{ className: 'dark:!text-gray-400' }}
-      containerProps={{ className: 'min-w-0' }}
+      // Kütüphanenin min-w-[200px] sınıfı birleştirilmeden eklendiği için önemli (!) işareti gerekli;
+      // yoksa dar alanda kutu taşar.
+      containerProps={{ className: '!min-w-0' }}
     />
   );
 }
