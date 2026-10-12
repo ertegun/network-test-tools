@@ -4,7 +4,7 @@
 
 import * as MT from '@material-tailwind/react';
 import { Icon as IconifyIcon, type IconifyIcon as IconData } from '@iconify/react/offline';
-import type { ComponentType, ReactNode } from 'react';
+import { useId, type ComponentType, type ReactNode } from 'react';
 
 type Color = 'blue' | 'gray' | 'green' | 'red' | 'amber' | 'blue-gray' | 'deep-orange';
 
@@ -89,13 +89,20 @@ const MTInput = loose<{
   containerProps?: { className?: string };
   crossOrigin?: undefined;
 }>(MT.Input);
+// Pasif alan da çerçevesini ve etiketini korur (kütüphane varsayılanı ikisini de gizler); yalnızca
+// zemini koyulaşır. Koyu temada açık zemin açık renkli metinle okunmadığı için gri-700. Tüm form
+// elemanlarında aynı.
+const FIELD_DISABLED = 'disabled:!border dark:disabled:bg-gray-700';
+const LABEL_DISABLED =
+  'peer-disabled:!text-blue-gray-500 dark:peer-disabled:!text-gray-400 peer-disabled:before:!border-blue-gray-200 peer-disabled:after:!border-blue-gray-200';
+
 export function Input({ onChange, className = '', ...p }: InputProps) {
   return (
     <MTInput
       {...p}
       onChange={(e) => onChange(e.target.value)}
-      className={`dark:text-gray-100 ${className}`}
-      labelProps={{ className: 'dark:!text-gray-400' }}
+      className={`dark:text-gray-100 ${FIELD_DISABLED} ${className}`}
+      labelProps={{ className: `dark:!text-gray-400 ${LABEL_DISABLED}` }}
       // Kütüphanenin min-w-[200px] sınıfı birleştirilmeden eklendiği için önemli (!) işareti gerekli;
       // yoksa dar alanda kutu taşar.
       containerProps={{ className: '!min-w-0' }}
@@ -103,59 +110,72 @@ export function Input({ onChange, className = '', ...p }: InputProps) {
   );
 }
 
-/** Material Tailwind Select'in bilinen sorunları nedeniyle yerel select, aynı görünümle.
- *  `outlined`: etiket Input'taki gibi çerçevenin üst kenarında durur (kutu yüksekliği Input'la aynı). */
+const MTTextarea = loose<{
+  label: string;
+  value: string;
+  onChange: (e: { target: { value: string } }) => void;
+  placeholder?: string;
+  spellCheck?: boolean;
+  disabled?: boolean;
+  className?: string;
+  labelProps?: { className?: string };
+  containerProps?: { className?: string };
+}>(MT.Textarea);
+/** Çok satırlı alan; Input'la aynı çerçeve, yüksekliği `className` ile serbestçe verilir. */
+export function Textarea({ onChange, className = '', ...p }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; spellCheck?: boolean; disabled?: boolean; className?: string }) {
+  return (
+    <MTTextarea
+      {...p}
+      onChange={(e) => onChange(e.target.value)}
+      // Etiket boş alanda kutunun içinde durur; placeholder onunla çakışmasın diye yalnızca odakta görünür.
+      className={`placeholder:opacity-0 focus:placeholder:opacity-100 dark:text-gray-100 ${FIELD_DISABLED} ${className}`}
+      labelProps={{ className: `dark:!text-gray-400 ${LABEL_DISABLED}` }}
+      // Kütüphane kapsayıcıya sabit h-10 ve min-w-[200px] verir; çok satırlı alan altındaki içeriğin üstüne taşmasın.
+      containerProps={{ className: '!h-auto !min-w-0' }}
+    />
+  );
+}
+
+/** Material Tailwind Select'in bilinen sorunları nedeniyle yerel select; Input'la aynı çerçeve
+ *  (etiket çerçevenin üst kenarında, kutu yüksekliği 40 px). Sınıflar Material Tailwind'in outlined
+ *  Input'undan alındı: üst kenar şeffaf, etiketin iki yanındaki çizgiler before/after ile çizilir;
+ *  böylece arka plan renginden bağımsızdır. */
 export function Select<T extends string>({
   label,
   value,
   options,
   onChange,
   disabled,
-  outlined = false,
 }: {
   label: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
   disabled?: boolean;
-  outlined?: boolean;
 }) {
-  const optionList = options.map((o) => (
-    <option key={o.value} value={o.value}>
-      {o.label}
-    </option>
-  ));
-  if (outlined) {
-    // Sınıflar Material Tailwind'in outlined Input'undan alındı: üst kenar şeffaf, etiketin iki
-    // yanındaki çizgiler before/after ile çizilir; böylece arka plan renginden bağımsızdır.
-    return (
-      <div className="relative h-10 w-full min-w-0">
-        <select
-          className="peer h-full w-full rounded-[7px] border border-blue-gray-200 border-t-transparent bg-transparent px-3 py-2.5 text-sm text-blue-gray-700 outline outline-0 transition-all focus:border-2 focus:border-gray-900 focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50 dark:bg-gray-800 dark:text-gray-100"
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.value as T)}
-        >
-          {optionList}
-        </select>
-        <label className="pointer-events-none absolute -top-1.5 left-0 flex h-full w-full select-none truncate text-[11px] font-normal leading-tight text-gray-500 !overflow-visible transition-all before:pointer-events-none before:mr-1 before:mt-[6.5px] before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-l before:border-t before:border-blue-gray-200 before:transition-all after:pointer-events-none after:ml-1 after:mt-[6.5px] after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-r after:border-t after:border-blue-gray-200 after:transition-all peer-focus:text-gray-900 peer-focus:before:border-l-2 peer-focus:before:border-t-2 peer-focus:before:!border-gray-900 peer-focus:after:border-r-2 peer-focus:after:border-t-2 peer-focus:after:!border-gray-900 peer-disabled:before:border-transparent peer-disabled:after:border-transparent dark:!text-gray-400">
-          {label}
-        </label>
-      </div>
-    );
-  }
+  const id = useId();
   return (
-    <label className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-400">
-      {label}
+    <div className="relative h-10 w-full min-w-0">
       <select
-        className="h-10 rounded-md border border-gray-300 bg-transparent px-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        id={id}
+        className={`peer h-full w-full rounded-[7px] border border-blue-gray-200 border-t-transparent bg-transparent px-3 py-2.5 text-sm text-blue-gray-700 outline outline-0 transition-all focus:border-2 focus:border-gray-900 focus:border-t-transparent focus:outline-0 disabled:bg-blue-gray-50 dark:bg-gray-800 dark:text-gray-100 ${FIELD_DISABLED}`}
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value as T)}
       >
-        {optionList}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
       </select>
-    </label>
+      <label
+        htmlFor={id}
+        className={`pointer-events-none absolute -top-1.5 left-0 flex h-full w-full select-none truncate text-[11px] font-normal leading-tight text-gray-500 !overflow-visible transition-all before:pointer-events-none before:mr-1 before:mt-[6.5px] before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-l before:border-t before:border-blue-gray-200 before:transition-all after:pointer-events-none after:ml-1 after:mt-[6.5px] after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-r after:border-t after:border-blue-gray-200 after:transition-all peer-focus:text-gray-900 peer-focus:before:border-l-2 peer-focus:before:border-t-2 peer-focus:before:!border-gray-900 peer-focus:after:border-r-2 peer-focus:after:border-t-2 peer-focus:after:!border-gray-900 dark:!text-gray-400 ${LABEL_DISABLED}`}
+      >
+        {label}
+      </label>
+    </div>
   );
 }
 

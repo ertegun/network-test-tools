@@ -155,6 +155,7 @@
     "addGroup": "Add group",
     "newGroup": "New group",
     "groupName": "Group name",
+    "entries": "Entries (IP and domain)",
     "enabled": "Enabled",
     "noGroups": "No groups yet.",
     "saveGroups": "Save groups",

@@ -155,6 +155,7 @@
     "addGroup": "Grup ekle",
     "newGroup": "Yeni grup",
     "groupName": "Grup adı",
+    "entries": "Kayıtlar (IP ve alan adı)",
     "enabled": "Açık",
     "noGroups": "Henüz grup yok.",
     "saveGroups": "Grupları kaydet",
