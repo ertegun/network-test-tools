@@ -2,17 +2,18 @@
 // çalışır; her işlemin parametreleri çalıştırılmadan önce doğrulanır. Serbest komut yoktur.
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { applyBlock, isHostsFileContent, isValidEntry, MAX_HOSTS_FILE_BYTES } from '../core/hosts';
+import { applyBlock, isValidEntry, MAX_HOSTS_FILE_BYTES } from '../core/hosts';
 import { isValidInterfaceName, isValidIPv4, normalizeMask, validateStaticConfig } from '../core/validate';
 import type { Platform } from '../platform';
 import type { HostsEntry, Ipv4Config } from '../shared/types';
+import { runConfirmableChange, type SessionContext } from './change';
 
 export class InvalidParamsError extends Error {}
 
 interface Operation<P> {
   /** Ham parametreyi doğrular ve tipli hale getirir; geçersizse InvalidParamsError. */
   parse(raw: unknown): P;
-  run(params: P, platform: Platform): Promise<unknown>;
+  run(params: P, platform: Platform, ctx: SessionContext): Promise<unknown>;
 }
 
 function obj(raw: unknown): Record<string, unknown> {
@@ -69,13 +70,23 @@ async function writeHosts(path: string, content: string): Promise<void> {
 
 const defineOp = <P>(op: Operation<P>) => op;
 
+function parseIfaceConfig(raw: unknown) {
+  const o = obj(raw);
+  onlyKeys(o, ['interface', 'config']);
+  return { iface: parseInterface(o.interface), config: parseIpv4Config(o.config) };
+}
+
 export const OPERATIONS = {
-  'ipv4.apply': defineOp({
-    parse(raw: unknown) {
-      const o = obj(raw);
-      onlyKeys(o, ['interface', 'config']);
-      return { iface: parseInterface(o.interface), config: parseIpv4Config(o.config) };
+  /** Onaylı değişiklik: yedek, uygulama ve 15 sn geri alma aynı yetkili süreçte. */
+  'ipv4.change': defineOp({
+    parse: parseIfaceConfig,
+    run(p: { iface: string; config: Ipv4Config }, platform: Platform, ctx: SessionContext) {
+      return runConfirmableChange(p.iface, p.config, platform, ctx);
     },
+  }),
+  /** Yalnızca çökme sonrası kurtarmada önceki ayarı geri yüklemek için. */
+  'ipv4.apply': defineOp({
+    parse: parseIfaceConfig,
     async run(p: { iface: string; config: Ipv4Config }, platform: Platform) {
       await platform.applyIpv4(p.iface, p.config);
       return null;
@@ -106,19 +117,6 @@ export const OPERATIONS = {
       if (after !== before) await writeHosts(path, after);
       await platform.flushDns().catch(() => undefined);
       return { changed: after !== before };
-    },
-  }),
-  'hosts.restore': defineOp({
-    parse(raw: unknown) {
-      const o = obj(raw);
-      onlyKeys(o, ['content']);
-      if (typeof o.content !== 'string' || !isHostsFileContent(o.content)) throw new InvalidParamsError('geçersiz hosts içeriği');
-      return { content: o.content };
-    },
-    async run(p: { content: string }, platform: Platform) {
-      await writeHosts(platform.hostsPath(), p.content);
-      await platform.flushDns().catch(() => undefined);
-      return null;
     },
   }),
 };

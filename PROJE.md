@@ -265,6 +265,8 @@ Fazlar sırayla ilerler; bir sonraki faza kapıdaki koşul sağlanınca geçilir
 - `BrowserWindow`: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`. Üretimde katı CSP (`connect-src 'none'`).
 - Komutlar yalnızca `execFile` ile, argümanlar ayrı ayrı; kullanıcı girdisi kabuk komutuna eklenmez.
 - Yetkili yeni işlem = `src/helper/operations.ts`'e beyaz liste girdisi + doğrulama + test.
+- Main ↔ yardımcı yalnızca `src/helper/channel.ts` kanalıyla (named pipe / 0700 dizinde Unix soketi; istek özeti komut satırında). İstek/sonuç dosyası yazılmaz. Renderer'a genel yetkili çağrı açılmaz.
+- IP/DNS değişikliği `ipv4.change` ile: yedek, uygulama ve 15 sn geri alma aynı yetkili süreçte (ikinci yetki penceresi yok).
 - Sistem ayarını değiştiren her işlem yedekli, `audit.log`'a yazılır (userData).
 - Arayüz metni koda yazılmaz; TR ve EN JSON'larına aynı anahtarla eklenir (test kontrol eder).
 - Material Tailwind bileşenleri yalnızca `components/ui.tsx` sarmalayıcıları üzerinden kullanılır.

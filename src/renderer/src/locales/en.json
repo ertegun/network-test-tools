@@ -171,7 +171,7 @@
     "review": {
       "apply": "Entries from enabled groups will be written to the NetKit block in the hosts file. The current file is backed up first, then the operating system will ask for administrator privileges and the DNS cache will be flushed.",
       "removeAll": "The NetKit block will be removed from the hosts file; lines outside the block stay unchanged. A backup is taken first and administrator privileges are requested.",
-      "restore": "The hosts file will be replaced with the selected backup. The current file is backed up first and administrator privileges are requested."
+      "restore": "Only the NetKit block from the selected backup is restored; lines outside the block are not changed. The current file is backed up first and administrator privileges are requested."
     },
     "done": {
       "apply": "The hosts file was updated and the DNS cache was flushed.",

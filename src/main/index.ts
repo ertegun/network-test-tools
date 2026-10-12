@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { app, BrowserWindow, ipcMain, nativeTheme, session, shell, type IpcMainInvokeEvent } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, session, type IpcMainInvokeEvent } from 'electron';
 import { PUBLIC_IP_SERVICES } from '../core/publicIp';
-import { runHelperFromFiles } from '../helper';
+import { runHelper } from '../helper';
 import { getPlatform } from '../platform';
 import type { ChangeStatus, HostsGroup, Ipv4Config, NetProfile, PendingChangeJournal, ScanRequest, Settings } from '../shared/types';
 import { AuditLog } from './audit';
@@ -15,8 +15,8 @@ import { JsonFile } from './store';
 // --- Yetkili yardımcı modu: pencere açılmaz, istek işlenip çıkılır. ---
 const helperIdx = process.argv.indexOf(HELPER_FLAG);
 if (helperIdx !== -1) {
-  const [reqPath, resPath] = process.argv.slice(helperIdx + 1, helperIdx + 3);
-  void runHelperFromFiles(reqPath, resPath, getPlatform()).then((code) => app.exit(code), () => app.exit(1));
+  const [endpoint, token, requestHash] = process.argv.slice(helperIdx + 1, helperIdx + 4);
+  void runHelper({ endpoint, token, requestHash }, getPlatform()).then((code) => app.exit(code), () => app.exit(1));
 } else {
   startApp();
 }
@@ -102,7 +102,6 @@ function startApp() {
   handle('hosts:apply', () => hosts.apply());
   handle('hosts:removeAll', () => hosts.removeAll());
   handle('hosts:restore', (id: string) => hosts.restore(id));
-  handle('privileged:run', (op: unknown, params: unknown) => privileged.run(op, params));
   handle('settings:get', () => getSettings());
   handle('settings:set', async (patch: Partial<Settings>) => {
     const next = { ...(await getSettings()), ...sanitizeSettings(patch) };
@@ -136,11 +135,8 @@ function startApp() {
       },
     });
     win.once('ready-to-show', () => win?.show());
-    // Uygulama içinde gezinme ve yeni pencere engellenir; dış bağlantılar tarayıcıda açılır.
-    win.webContents.setWindowOpenHandler(({ url }) => {
-      if (/^https:\/\//.test(url)) void shell.openExternal(url);
-      return { action: 'deny' };
-    });
+    // Uygulama içinde gezinme ve yeni pencere engellenir; renderer dış bağlantı açtıramaz (Gereksinim 9).
+    win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     win.webContents.on('will-navigate', (e) => e.preventDefault());
     if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) await win.loadURL(process.env.ELECTRON_RENDERER_URL);
     else await win.loadFile(join(__dirname, '../renderer/index.html'));

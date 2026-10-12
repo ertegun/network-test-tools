@@ -76,9 +76,11 @@ export class HostsService {
     return this.privileged.run('hosts.writeBlock', { entries: [] }, { previous: parseBlockEntries(content), next: [] });
   }
 
+  /** Yedekteki yalnızca NetKit bloğu geri yüklenir; blok dışı satırlara dokunulmaz (Gereksinim 7). */
   async restore(backupId: string): Promise<PrivilegedResult> {
-    const content = await readBackup(this.backupDir, backupId);
+    const entries = parseBlockEntries(await readBackup(this.backupDir, backupId)).filter(isValidEntry);
+    const content = await this.readHosts();
     await this.backupCurrent();
-    return this.privileged.run('hosts.restore', { content }, { previous: 'current', next: backupId });
+    return this.privileged.run('hosts.writeBlock', { entries }, { previous: parseBlockEntries(content), next: entries });
   }
 }

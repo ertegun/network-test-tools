@@ -1,19 +1,20 @@
 // M7: IP/DNS değişikliği, otomatik geri alma, çökme sonrası kurtarma ve profiller.
 
 import { networkInterfaces } from 'node:os';
-import { ConfirmableChange } from '../core/rollback';
 import { isValidInterfaceName, isValidIPv4, normalizeMask, validateStaticConfig } from '../core/validate';
 import type { Platform } from '../platform';
 import type { ConfigValidation } from '../shared/api';
 import type { ChangeStatus, Ipv4Config, NetProfile, PendingChangeJournal, PrivilegedResult } from '../shared/types';
-import type { PrivilegedRunner } from './privileged';
+import type { PrivilegedRunner, PrivilegedSession } from './privileged';
 import type { JsonFile } from './store';
 
 export const PREVIOUS_PROFILE = 'Önceki ayar';
-const DHCP_WAIT_MS = 8000;
+const TERMINAL = new Set<ChangeStatus['phase']>(['confirmed', 'rolledBack', 'failed']);
 
 export class ConfigService {
-  private change?: ConfirmableChange;
+  private session?: PrivilegedSession;
+  private status?: ChangeStatus;
+  private final?: Promise<ChangeStatus>;
 
   constructor(
     private readonly platform: Platform,
@@ -38,7 +39,7 @@ export class ConfigService {
   }
 
   async apply(iface: string, cfg: Ipv4Config): Promise<ChangeStatus> {
-    const phase = this.change?.current?.phase;
+    const phase = this.status?.phase;
     if (phase === 'applying' || phase === 'awaitingConfirm' || phase === 'rollingBack') throw new Error('changeInProgress');
     const v = await this.validate(iface, cfg);
     if (v.errors.length > 0) {
@@ -48,45 +49,52 @@ export class ConfigService {
       return status;
     }
     const normalized: Ipv4Config = cfg.mode === 'static' ? { ...cfg, mask: normalizeMask(cfg.mask ?? '') ?? cfg.mask } : cfg;
-    let previous: Ipv4Config | undefined;
-    this.change = new ConfirmableChange({
-      snapshot: async (i) => {
-        previous = await this.platform.readIpv4Config(i);
-        await this.saveProfile({ name: PREVIOUS_PROFILE, config: previous });
-        return previous;
+    // Yedek, uygulama ve 15 sn geri alma yetkili yardımcının içinde yürür (tek yetki penceresi).
+    let settle!: (s: ChangeStatus) => void;
+    let ready!: (s: ChangeStatus) => void;
+    this.final = new Promise((r) => (settle = r));
+    const started = new Promise<ChangeStatus>((r) => (ready = r));
+    const emit = (s: ChangeStatus) => {
+      this.status = s;
+      this.onStatus(s);
+      if (TERMINAL.has(s.phase)) {
+        settle(s);
+        ready(s);
+      } else if (s.phase === 'awaitingConfirm' && s.connectivityOk !== undefined) ready(s);
+    };
+    emit({ phase: 'applying', interfaceName: iface });
+    const session = this.privileged.start(
+      'ipv4.change',
+      { interface: iface, config: normalized },
+      { next: normalized },
+      {
+        onStatus: emit,
+        onJournal: async (j) => {
+          if (!j) return this.journal.remove();
+          await this.journal.write(j);
+          await this.saveProfile({ name: PREVIOUS_PROFILE, config: j.previous });
+        },
       },
-      apply: async (i, c) => {
-        const r = await this.privileged.run('ipv4.apply', { interface: i, config: c }, { previous: c === normalized ? previous : normalized, next: c });
-        if (!r.ok) throw new Error(r.message);
-      },
-      verifyConnectivity: (i, c) => this.verify(i, c),
-      writeJournal: (j) => this.journal.write(j),
-      clearJournal: () => this.journal.remove(),
-      onStatus: this.onStatus,
+    );
+    this.session = session;
+    void session.result.then((r) => {
+      if (this.session === session) this.session = undefined;
+      // Yardımcı sonuçlanmadan çıktıysa (iptal, çökme) değişiklik başarısız sayılır; günlük varsa kurtarma önerilir.
+      if (this.status && !TERMINAL.has(this.status.phase)) emit({ phase: 'failed', interfaceName: iface, error: r.ok ? 'yardımcı sonuç bildirmedi' : r.message });
     });
-    return this.change.start(iface, normalized);
+    return started;
   }
 
-  confirm(): Promise<boolean> {
-    return this.change?.confirm() ?? Promise.resolve(false);
+  async confirm(): Promise<boolean> {
+    if (!this.session || this.status?.phase !== 'awaitingConfirm') return false;
+    this.session.command('confirm');
+    return (await this.final)?.phase === 'confirmed';
   }
 
   async revert(): Promise<void> {
-    await this.change?.revertNow();
-  }
-
-  private async verify(iface: string, cfg: Ipv4Config): Promise<boolean> {
-    const deadline = Date.now() + DHCP_WAIT_MS;
-    // DHCP'de adres gelene kadar kısa süre beklenir.
-    while (Date.now() < deadline) {
-      const has = networkInterfaces()[iface]?.some((i) => i.family === 'IPv4' && !i.address.startsWith('169.254.'));
-      if (has) break;
-      await new Promise((r) => setTimeout(r, 500));
-    }
-    const details = cfg.mode === 'static' ? {} : await this.platform.interfaceDetails().catch(() => ({}) as Awaited<ReturnType<Platform['interfaceDetails']>>);
-    const gateway = cfg.mode === 'static' ? cfg.gateway : details[iface]?.gateway;
-    if (!gateway) return false;
-    return this.platform.ping(gateway, 1500).catch(() => false);
+    if (!this.session || this.status?.phase !== 'awaitingConfirm') return;
+    this.session.command('revert');
+    await this.final;
   }
 
   pendingRecovery(): Promise<PendingChangeJournal | null> {

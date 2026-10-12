@@ -49,7 +49,6 @@ const api: NetkitApi = {
     removeAll: () => invoke('hosts:removeAll'),
     restore: (id) => invoke('hosts:restore', id),
   },
-  runPrivileged: (op, params) => invoke('privileged:run', op, params),
   settings: {
     get: () => invoke('settings:get'),
     set: (patch) => invoke('settings:set', patch),

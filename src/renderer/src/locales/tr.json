@@ -171,7 +171,7 @@
     "review": {
       "apply": "Açık gruplardaki kayıtlar hosts dosyasındaki NetKit bloğuna yazılacak. Önce mevcut dosya yedeklenecek, ardından işletim sistemi yönetici yetkisi isteyecek ve DNS önbelleği temizlenecek.",
       "removeAll": "Hosts dosyasındaki NetKit bloğu tamamen kaldırılacak; blok dışındaki satırlar değişmeyecek. Önce yedek alınacak ve yönetici yetkisi istenecek.",
-      "restore": "Hosts dosyası seçilen yedekle değiştirilecek. Mevcut dosya önce yedeklenecek ve yönetici yetkisi istenecek."
+      "restore": "Seçilen yedekteki yalnızca NetKit bloğu geri yüklenecek; blok dışı satırlar değişmez. Mevcut dosya önce yedeklenecek ve yönetici yetkisi istenecek."
     },
     "done": {
       "apply": "Hosts dosyası güncellendi ve DNS önbelleği temizlendi.",

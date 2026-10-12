@@ -60,8 +60,6 @@ export interface NetkitApi {
     removeAll(): Promise<PrivilegedResult>;
     restore(backupId: string): Promise<PrivilegedResult>;
   };
-  /** Yetkili yardımcıya doğrudan istek. Beyaz liste dışı işlemler reddedilir ve günlüğe yazılır. */
-  runPrivileged(op: string, params?: unknown): Promise<PrivilegedResult>;
   settings: {
     get(): Promise<Settings>;
     set(patch: Partial<Settings>): Promise<Settings>;

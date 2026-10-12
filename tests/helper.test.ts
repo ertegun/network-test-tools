@@ -2,9 +2,13 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { outsideLines } from '../src/core/hosts';
-import { handleRequest, runHelperFromFiles, validateRequest } from '../src/helper';
+import { CONFIRM_TIMEOUT_MS } from '../src/core/rollback';
+import { handleRequest, validateRequest } from '../src/helper';
+import type { ChangeCommand, SessionContext } from '../src/helper/change';
+import type { Platform } from '../src/platform';
+import type { ChangeStatus, Ipv4Config, PendingChangeJournal } from '../src/shared/types';
 import { fakePlatform } from './fakePlatform';
 
 let dir: string;
@@ -87,21 +91,103 @@ describe('yetkili yardımcı beyaz listesi (Gereksinim 8)', () => {
     }
   });
 
-  it('hosts geri yükleme yalnızca hosts biçimindeki içeriği kabul eder', async () => {
+  it('tam hosts dosyası yazan işlem beyaz listede değildir (Gereksinim 7)', async () => {
     const hostsPath = join(dir, 'hosts');
     await writeFile(hostsPath, 'önceki');
     const platform = fakePlatform(hostsPath);
-    expect(await handleRequest({ op: 'hosts.restore', params: { content: '#!/bin/sh\nrm -rf /\n' } }, platform)).toMatchObject({ code: 'invalidParams' });
+    expect(await handleRequest({ op: 'hosts.restore', params: { content: '127.0.0.1 localhost\n' } }, platform)).toMatchObject({ code: 'notWhitelisted' });
     expect(await readFile(hostsPath, 'utf8')).toBe('önceki');
-    expect(await handleRequest({ op: 'hosts.restore', params: { content: '127.0.0.1 localhost\n' } }, platform)).toEqual({ ok: true, output: null });
-    expect(await readFile(hostsPath, 'utf8')).toBe('127.0.0.1 localhost\n');
+  });
+});
+
+describe('yardımcı içinde onaylı değişiklik (M7, ipv4.change)', () => {
+  const PREVIOUS: Ipv4Config = { mode: 'dhcp', dns: [] };
+  const WRONG: Ipv4Config = { mode: 'static', ip: '10.99.99.99', mask: '255.255.255.0', gateway: '10.99.99.1', dns: [] };
+
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function context() {
+    let command: ((c: ChangeCommand) => void) | undefined;
+    const journal: (PendingChangeJournal | null)[] = [];
+    const statuses: ChangeStatus[] = [];
+    const ctx: SessionContext = {
+      status: (s) => statuses.push(s),
+      saveJournal: vi.fn(async (j: PendingChangeJournal | null) => {
+        journal.push(j);
+      }),
+      onCommand: (cb) => (command = cb),
+    };
+    return { ctx, journal, statuses, send: (c: ChangeCommand) => command?.(c) };
+  }
+
+  function platformWithPrevious() {
+    const platform = fakePlatform();
+    vi.mocked(platform.readIpv4Config).mockResolvedValue(PREVIOUS);
+    return platform;
+  }
+
+  const change = (platform: Platform, ctx: SessionContext) =>
+    handleRequest({ op: 'ipv4.change', params: { interface: 'Ethernet', config: WRONG } }, platform, ctx);
+
+  it('kabul kriteri: onay gelmezse yardımcı 15 sn sonunda eski ayarı kendisi geri yükler', async () => {
+    const platform = platformWithPrevious();
+    const { ctx, journal, statuses } = context();
+    const done = change(platform, ctx);
+    await vi.advanceTimersByTimeAsync(CONFIRM_TIMEOUT_MS - 1);
+    expect(vi.mocked(platform.applyIpv4).mock.calls).toEqual([['Ethernet', WRONG]]);
+    await vi.advanceTimersByTimeAsync(1);
+    const r = await done;
+    expect(vi.mocked(platform.applyIpv4).mock.calls).toEqual([
+      ['Ethernet', WRONG],
+      ['Ethernet', PREVIOUS],
+    ]);
+    expect(r).toMatchObject({ ok: true, output: { phase: 'rolledBack' } });
+    expect(statuses.map((s) => s.phase)).toContain('awaitingConfirm');
+    // Yedek yardımcı tarafından okunur ve uygulamadan önce günlüğe yazılır, sonra silinir.
+    expect(journal).toEqual([expect.objectContaining({ interfaceName: 'Ethernet', previous: PREVIOUS, next: WRONG }), null]);
   });
 
-  it('dosya tabanlı giriş noktası sonucu dosyaya yazar', async () => {
-    const req = join(dir, 'req.json');
-    const res = join(dir, 'res.json');
-    await writeFile(req, JSON.stringify({ op: 'calc.exe' }));
-    expect(await runHelperFromFiles(req, res, fakePlatform())).toBe(1);
-    expect(JSON.parse(await readFile(res, 'utf8'))).toMatchObject({ ok: false, code: 'notWhitelisted' });
+  it('onay gelirse geri alma yapılmaz', async () => {
+    const platform = platformWithPrevious();
+    const { ctx, send } = context();
+    const done = change(platform, ctx);
+    await vi.advanceTimersByTimeAsync(3000);
+    send('confirm');
+    await vi.advanceTimersByTimeAsync(CONFIRM_TIMEOUT_MS * 2);
+    expect(await done).toMatchObject({ ok: true, output: { phase: 'confirmed' } });
+    expect(platform.applyIpv4).toHaveBeenCalledTimes(1);
+  });
+
+  it('main bağlantısı koparsa süre beklenmeden eski ayara dönülür', async () => {
+    const platform = platformWithPrevious();
+    const { ctx, send } = context();
+    const done = change(platform, ctx);
+    await vi.advanceTimersByTimeAsync(3000);
+    send('disconnect');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await done).toMatchObject({ ok: true, output: { phase: 'rolledBack' } });
+    expect(vi.mocked(platform.applyIpv4).mock.calls.at(-1)).toEqual(['Ethernet', PREVIOUS]);
+  });
+
+  it('günlük kaydedilemezse değişiklik uygulanmaz', async () => {
+    const platform = platformWithPrevious();
+    const { ctx } = context();
+    ctx.saveJournal = vi.fn(async () => Promise.reject(new Error('main yok')));
+    const r = await change(platform, ctx);
+    expect(r).toMatchObject({ ok: true, output: { phase: 'failed' } });
+    expect(platform.applyIpv4).not.toHaveBeenCalled();
+  });
+
+  it('kabul kriteri (M7): geçersiz IP 999.1.1.1 ile onaylı değişiklik de başlamaz', async () => {
+    const platform = platformWithPrevious();
+    const r = await handleRequest(
+      { op: 'ipv4.change', params: { interface: 'Ethernet', config: { mode: 'static', ip: '999.1.1.1', mask: '255.255.255.0', dns: [] } } },
+      platform,
+      context().ctx,
+    );
+    expect(r).toMatchObject({ ok: false, code: 'invalidParams' });
+    expect(platform.readIpv4Config).not.toHaveBeenCalled();
+    expect(platform.applyIpv4).not.toHaveBeenCalled();
   });
 });
