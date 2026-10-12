@@ -103,20 +103,47 @@ export function Input({ onChange, className = '', ...p }: InputProps) {
   );
 }
 
-/** Material Tailwind Select'in bilinen sorunları nedeniyle yerel select, aynı görünümle. */
+/** Material Tailwind Select'in bilinen sorunları nedeniyle yerel select, aynı görünümle.
+ *  `outlined`: etiket Input'taki gibi çerçevenin üst kenarında durur (kutu yüksekliği Input'la aynı). */
 export function Select<T extends string>({
   label,
   value,
   options,
   onChange,
   disabled,
+  outlined = false,
 }: {
   label: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
   disabled?: boolean;
+  outlined?: boolean;
 }) {
+  const optionList = options.map((o) => (
+    <option key={o.value} value={o.value}>
+      {o.label}
+    </option>
+  ));
+  if (outlined) {
+    // Sınıflar Material Tailwind'in outlined Input'undan alındı: üst kenar şeffaf, etiketin iki
+    // yanındaki çizgiler before/after ile çizilir; böylece arka plan renginden bağımsızdır.
+    return (
+      <div className="relative h-10 w-full min-w-0">
+        <select
+          className="peer h-full w-full rounded-[7px] border border-blue-gray-200 border-t-transparent bg-transparent px-3 py-2.5 text-sm text-blue-gray-700 outline outline-0 transition-all focus:border-2 focus:border-gray-900 focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50 dark:bg-gray-800 dark:text-gray-100"
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value as T)}
+        >
+          {optionList}
+        </select>
+        <label className="pointer-events-none absolute -top-1.5 left-0 flex h-full w-full select-none truncate text-[11px] font-normal leading-tight text-gray-500 !overflow-visible transition-all before:pointer-events-none before:mr-1 before:mt-[6.5px] before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-l before:border-t before:border-blue-gray-200 before:transition-all after:pointer-events-none after:ml-1 after:mt-[6.5px] after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-r after:border-t after:border-blue-gray-200 after:transition-all peer-focus:text-gray-900 peer-focus:before:border-l-2 peer-focus:before:border-t-2 peer-focus:before:!border-gray-900 peer-focus:after:border-r-2 peer-focus:after:border-t-2 peer-focus:after:!border-gray-900 peer-disabled:before:border-transparent peer-disabled:after:border-transparent dark:!text-gray-400">
+          {label}
+        </label>
+      </div>
+    );
+  }
   return (
     <label className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-400">
       {label}
@@ -126,11 +153,7 @@ export function Select<T extends string>({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value as T)}
       >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
+        {optionList}
       </select>
     </label>
   );

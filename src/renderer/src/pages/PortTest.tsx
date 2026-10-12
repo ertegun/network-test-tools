@@ -130,14 +130,14 @@ export default function PortTest() {
       </Alert>
       {ctx && <ContextBar ctx={ctx} />}
       <Card title={t('portTest.title')}>
-        {/* Alanlar kutularının alt kenarına hizalanır (Select etiketi kutunun üstünde durur);
-            pencere daralınca taşmadan alt satıra kayar. */}
+        {/* Alanlar kutularının alt kenarına hizalanır; pencere daralınca taşmadan alt satıra kayar. */}
         <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-0 flex-[2_1_16rem]">
+          <div className="min-w-0 flex-[2_1_14rem]">
             <Input label={t('portTest.target')} value={target} onChange={setTarget} />
           </div>
-          <div className="min-w-0 flex-[1_1_11rem]">
+          <div className="min-w-0 flex-[1_1_13rem]">
             <Select<PortSource>
+              outlined
               label={t('portTest.portSource')}
               value={source}
               onChange={setSource}
