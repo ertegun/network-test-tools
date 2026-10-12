@@ -1,0 +1,77 @@
+# v* tag'i push edilince üç platformda paketler; tüm build'ler başarılıysa tek bir GitHub Release yayınlar.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Tag ile package.json sürümü aynı olmalı
+        shell: bash
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME, package.json sürümüyle ($expected) uyuşmuyor"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # Sertifika yok: Windows/Linux imzasız, macOS ad-hoc imzalı (package.json > build.mac.identity "-").
+      - name: Paketle
+        run: npm run dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: netkit-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Release notu
+        run: node scripts/release-notes.ts "$GITHUB_REF_NAME" > release-notes.md
+
+      - name: Release oluştur
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "NetKit $GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

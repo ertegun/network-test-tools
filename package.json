@@ -7,10 +7,12 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
+    "dist": "npm run build && electron-builder --publish never",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release-notes": "node scripts/release-notes.ts"
   },
   "dependencies": {
     "@iconify-icons/material-symbols": "2.0.6",
@@ -29,6 +31,7 @@
     "@vitejs/plugin-react": "5.2.0",
     "autoprefixer": "10.6.1",
     "electron": "44.7.0",
+    "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
     "eslint": "10.12.0",
     "eslint-plugin-react-hooks": "7.1.1",
@@ -39,5 +42,51 @@
     "typescript-eslint": "8.71.1",
     "vite": "7.3.7",
     "vitest": "5.0.3"
+  },
+  "build": {
+    "appId": "com.netkit.app",
+    "productName": "NetKit",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": "-",
+      "hardenedRuntime": false,
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Network"
+    }
   }
 }

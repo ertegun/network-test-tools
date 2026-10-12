@@ -259,6 +259,8 @@ Fazlar sırayla ilerler; bir sonraki faza kapıdaki koşul sağlanınca geçilir
 **Komutlar**
 - `npm install` · `npm run dev` (geliştirme) · `npm start` (derlenmişi önizle)
 - `npm test` · `npm run lint` · `npm run typecheck` · `npm run build` (typecheck + derleme → `out/`)
+- `npm run dist` (build + electron-builder → `dist/`, yalnızca bulunulan OS için) · `npm run release-notes -- <tag>` (release notu önizleme)
+- Release: `v*` tag push → `.github/workflows/release.yml`. Commit mesajı Conventional Commits: `feat:` → Features, `fix:` → Bug Fixes, diğerleri → Other Changes.
 
 **Kurallar**
 - Renderer Node/Electron içe aktaramaz (ESLint kuralı); her şey `window.netkit` üzerinden.
