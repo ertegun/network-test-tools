@@ -1,0 +1,204 @@
+{
+  "nav": {
+    "dashboard": "Ağ bilgi paneli",
+    "portTest": "Port testi",
+    "config": "Ağ yapılandırması",
+    "hosts": "Hosts yönetimi",
+    "settings": "Ayarlar"
+  },
+  "common": {
+    "loading": "Yükleniyor…",
+    "refresh": "Yenile",
+    "copy": "Kopyala",
+    "exportCsv": "CSV olarak dışa aktar",
+    "delete": "Sil",
+    "cancel": "Vazgeç",
+    "continueWithPrivilege": "Yetki iste ve devam et",
+    "cancelledByUser": "Yetki isteği iptal edildi; değişiklik yapılmadı.",
+    "authorizedOnly": "Yalnızca tarama yetkiniz olan ağları ve cihazları tarayın. İzinsiz tarama güvenlik sistemlerini tetikleyebilir ve yasal sorun doğurabilir."
+  },
+  "kind": {
+    "vpn": "VPN / sanal",
+    "ethernet": "Ethernet",
+    "wifi": "Wi-Fi",
+    "loopback": "Loopback",
+    "other": "Diğer"
+  },
+  "help": {
+    "mask": "Alt ağ maskesi: IP adresinin hangi kısmının ağı, hangi kısmının cihazı gösterdiğini belirler.",
+    "gateway": "Ağ geçidi: yerel ağ dışındaki adreslere giden trafiğin gönderildiği yönlendirici.",
+    "dns": "DNS sunucusu: alan adlarını IP adresine çeviren sunucu.",
+    "dhcp": "DHCP: IP ayarlarının ağdaki sunucudan otomatik alınması. Statik: elle girilmiş ayar.",
+    "sourceIp": "Hedefe gitmek için işletim sisteminin seçtiği arayüz ve yerel kaynak IP. Paket gönderilmeden yönlendirme tablosundan öğrenilir."
+  },
+  "dashboard": {
+    "publicIp": "Public IP",
+    "publicIpDisabled": "Public IP sorgusu ayarlardan kapatıldı.",
+    "publicIpError": "Public IP alınamadı: {{error}}",
+    "source": "Kaynak servis",
+    "queriedAt": "Sorgu zamanı",
+    "exitInterface": "Çıkış arayüzü",
+    "hostname": "Bilgisayar adı",
+    "updated": "güncellendi:",
+    "showAll": "Tüm arayüzleri göster",
+    "up": "Bağlı",
+    "down": "Bağlı değil",
+    "mask": "Alt ağ maskesi",
+    "gateway": "Ağ geçidi",
+    "addressing": "Adresleme",
+    "static": "Statik",
+    "lease": "kira"
+  },
+  "context": {
+    "time": "Tarih/saat",
+    "hostname": "Bilgisayar adı",
+    "interface": "Çıkış arayüzü",
+    "sourceIp": "Kaynak IP",
+    "publicIp": "Public IP",
+    "target": "Hedef",
+    "splitTunnel": "Dikkat: Hedefe giden trafik \"{{target}}\" arayüzünden, public IP sorgusu ise \"{{publicIface}}\" arayüzünden çıkıyor (split-tunnel). Gösterilen public IP bu hedef için geçerli olmayabilir."
+  },
+  "portTest": {
+    "title": "TCP port testi",
+    "target": "Hedef (IP veya alan adı)",
+    "portSource": "Port listesi",
+    "ports": "Portlar (ör. 22,80,1000-2000)",
+    "timeout": "Zaman aşımı (ms)",
+    "concurrency": "Eşzamanlı bağlantı (en fazla 1000)",
+    "start": "Taramayı başlat",
+    "stop": "Durdur",
+    "results": "Sonuçlar",
+    "all": "Tümü",
+    "port": "Port",
+    "state": "Durum",
+    "service": "Servis",
+    "errors": {
+      "invalidTarget": "Geçerli bir IP adresi veya alan adı girin.",
+      "invalidPorts": "Port listesi geçersiz. Örnek: 22,80,443,8000-8100 (1–65535).",
+      "invalidPreset": "Geçersiz hazır liste."
+    }
+  },
+  "presets": {
+    "custom": "Özel",
+    "top100": "Sık kullanılan 100 port",
+    "web": "Web",
+    "mail": "E-posta",
+    "remote": "Uzak masaüstü",
+    "database": "Veritabanı"
+  },
+  "state": {
+    "open": "Açık",
+    "closed": "Kapalı",
+    "filtered": "Filtrelenmiş",
+    "openHelp": "bağlantı kuruldu",
+    "closedHelp": "hedef bağlantıyı reddetti",
+    "filteredHelp": "yanıt yok, muhtemelen güvenlik duvarı"
+  },
+  "config": {
+    "title": "IPv4 ve DNS ayarı",
+    "privilegeNote": "Bu sayfadaki değişiklikler yönetici yetkisi ister. Uygulamadan önce ne yapılacağı gösterilir; değişiklikten sonra 15 saniye içinde onaylamazsanız eski ayar otomatik geri yüklenir.",
+    "interface": "Arayüz",
+    "current": "Mevcut ayar",
+    "mode": "Yöntem",
+    "static": "Statik",
+    "mask": "Maske veya /önek",
+    "gateway": "Ağ geçidi",
+    "dns": "DNS sunucuları",
+    "dnsHint": "DNS sunucularını virgülle ayırın (IPv4, en fazla 4). Boş bırakılırsa DNS otomatik (DHCP) alınır.",
+    "dnsAuto": "otomatik",
+    "validate": "Doğrula",
+    "apply": "Uygula…",
+    "conflict": "{{ip}} adresi ağda başka bir cihazdan yanıt veriyor. IP çakışması olabilir.",
+    "errors": {
+      "invalidInterface": "Geçersiz arayüz.",
+      "invalidIp": "Geçersiz IP adresi.",
+      "invalidMask": "Geçersiz alt ağ maskesi.",
+      "invalidGateway": "Geçersiz ağ geçidi.",
+      "gatewayOutsideSubnet": "Ağ geçidi bu IP ve maskeyle aynı alt ağda değil.",
+      "invalidDns": "Geçersiz DNS sunucusu.",
+      "tooManyDns": "En fazla 4 DNS sunucusu girilebilir.",
+      "networkOrBroadcast": "IP adresi ağ veya yayın (broadcast) adresi olamaz."
+    },
+    "reviewTitle": "Değişikliği onaylayın",
+    "reviewBody": "\"{{iface}}\" arayüzünde aşağıdaki değişiklik yapılacak. Önce mevcut ayar yedeklenecek, ardından işletim sistemi yönetici yetkisi isteyecek.",
+    "before": "Şu anki ayar",
+    "after": "Yeni ayar",
+    "rollbackNote": "Değişiklikten sonra 15 saniye içinde onay vermezseniz eski ayar otomatik geri yüklenir.",
+    "applyWithPrivilege": "Yetki iste ve uygula",
+    "keepTitle": "Yeni ayar korunsun mu?",
+    "keepBody": "Onaylamazsanız {{seconds}} saniye içinde eski ayar geri yüklenecek.",
+    "connectivityTesting": "Bağlantı test ediliyor…",
+    "connectivityOk": "Bağlantı testi başarılı: ağ geçidi yanıt veriyor.",
+    "connectivityFail": "Bağlantı testi başarısız: ağ geçidine ulaşılamadı.",
+    "keep": "Ayarı koru",
+    "revertNow": "Şimdi geri al",
+    "phase": {
+      "applying": "Değişiklik uygulanıyor…",
+      "confirmed": "Yeni ayar kalıcı hale getirildi.",
+      "rollingBack": "Eski ayar geri yükleniyor…",
+      "rolledBack": "Onay gelmedi; eski ayar geri yüklendi.",
+      "failed": "İşlem başarısız oldu."
+    },
+    "profiles": "Ağ profilleri",
+    "noProfiles": "Kayıtlı profil yok.",
+    "applyProfile": "Uygula…",
+    "profileName": "Profil adı",
+    "saveProfile": "Formu profil olarak kaydet",
+    "unsupported": {
+      "networkManagerMissing": "Ağ yapılandırması yalnızca NetworkManager kullanan Linux dağıtımlarında desteklenir. Bu sistemde NetworkManager çalışmıyor.",
+      "generic": "Ağ yapılandırması bu sistemde desteklenmiyor."
+    }
+  },
+  "hosts": {
+    "intro": "Sistem hosts dosyası: {{path}}. NetKit yalnızca kendi işaretli bloğunu yazar; blok dışındaki satırlara dokunmaz. Her yazmadan önce tam yedek alınır ve DNS önbelleği temizlenir.",
+    "groups": "Kayıt grupları",
+    "addGroup": "Grup ekle",
+    "newGroup": "Yeni grup",
+    "groupName": "Grup adı",
+    "enabled": "Açık",
+    "noGroups": "Henüz grup yok.",
+    "saveGroups": "Grupları kaydet",
+    "apply": "Sisteme uygula…",
+    "removeAll": "Tümünü kaldır…",
+    "invalidEntry": "Geçersiz kayıt: {{entry}}. Her satır \"IP alan.adi\" biçiminde olmalı.",
+    "conflict": "{{host}} farklı IP'lere gidiyor ({{ips}}; gruplar: {{groups}})",
+    "outside": "Blok dışındaki satırlar (salt okunur)",
+    "outsideHelp": "Bu satırlar NetKit tarafından değiştirilmez.",
+    "backups": "Yedekler (son 20)",
+    "noBackups": "Henüz yedek yok.",
+    "restore": "Bu yedeği geri yükle",
+    "reviewTitle": "Hosts dosyası değiştirilecek",
+    "review": {
+      "apply": "Açık gruplardaki kayıtlar hosts dosyasındaki NetKit bloğuna yazılacak. Önce mevcut dosya yedeklenecek, ardından işletim sistemi yönetici yetkisi isteyecek ve DNS önbelleği temizlenecek.",
+      "removeAll": "Hosts dosyasındaki NetKit bloğu tamamen kaldırılacak; blok dışındaki satırlar değişmeyecek. Önce yedek alınacak ve yönetici yetkisi istenecek.",
+      "restore": "Hosts dosyası seçilen yedekle değiştirilecek. Mevcut dosya önce yedeklenecek ve yönetici yetkisi istenecek."
+    },
+    "done": {
+      "apply": "Hosts dosyası güncellendi ve DNS önbelleği temizlendi.",
+      "removeAll": "NetKit bloğu kaldırıldı.",
+      "restore": "Yedek geri yüklendi."
+    }
+  },
+  "recovery": {
+    "message": "\"{{iface}}\" arayüzünde yarım kalmış bir ağ değişikliği bulundu. Önceki ayara dönmek ister misiniz?",
+    "revert": "Önceki ayara dön",
+    "dismiss": "Yoksay"
+  },
+  "settings": {
+    "appearance": "Görünüm",
+    "language": "Dil",
+    "theme": "Tema",
+    "system": "Sistemi izle",
+    "light": "Açık",
+    "dark": "Koyu",
+    "privacy": "Gizlilik",
+    "publicIpHelp": "NetKit'in kendiliğinden yaptığı tek dış istek public IP sorgusudur. Kapatırsanız uygulama hiçbir dış istek yapmaz.",
+    "publicIpEnabled": "Public IP sorgusu açık",
+    "publicIpService": "Public IP servisi"
+  },
+  "firstRun": {
+    "title": "Başlamadan önce",
+    "body": "NetKit port taraması ve ağ yapılandırması yapabilir. Yalnızca yetkili olduğunuz ağları tarayın; sistem ayarı değiştiren işlemler yönetici yetkisi ister ve yerel denetim günlüğüne yazılır.",
+    "accept": "Anladım"
+  }
+}

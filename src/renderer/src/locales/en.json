@@ -1,0 +1,204 @@
+{
+  "nav": {
+    "dashboard": "Network overview",
+    "portTest": "Port test",
+    "config": "Network configuration",
+    "hosts": "Hosts manager",
+    "settings": "Settings"
+  },
+  "common": {
+    "loading": "Loading…",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "exportCsv": "Export as CSV",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "continueWithPrivilege": "Request privileges and continue",
+    "cancelledByUser": "The privilege request was cancelled; nothing was changed.",
+    "authorizedOnly": "Only scan networks and devices you are authorized to test. Unauthorized scanning can trigger security systems and may be illegal."
+  },
+  "kind": {
+    "vpn": "VPN / virtual",
+    "ethernet": "Ethernet",
+    "wifi": "Wi-Fi",
+    "loopback": "Loopback",
+    "other": "Other"
+  },
+  "help": {
+    "mask": "Subnet mask: defines which part of the IP address identifies the network and which part the device.",
+    "gateway": "Gateway: the router that receives traffic for addresses outside the local network.",
+    "dns": "DNS server: translates domain names to IP addresses.",
+    "dhcp": "DHCP: IP settings are obtained automatically from a server on the network. Static: settings entered manually.",
+    "sourceIp": "The interface and local source IP the operating system picks to reach the target. Learned from the routing table without sending packets."
+  },
+  "dashboard": {
+    "publicIp": "Public IP",
+    "publicIpDisabled": "The public IP lookup is turned off in settings.",
+    "publicIpError": "Could not get the public IP: {{error}}",
+    "source": "Service",
+    "queriedAt": "Queried at",
+    "exitInterface": "Exit interface",
+    "hostname": "Computer name",
+    "updated": "updated",
+    "showAll": "Show all interfaces",
+    "up": "Connected",
+    "down": "Disconnected",
+    "mask": "Subnet mask",
+    "gateway": "Gateway",
+    "addressing": "Addressing",
+    "static": "Static",
+    "lease": "lease"
+  },
+  "context": {
+    "time": "Date/time",
+    "hostname": "Computer name",
+    "interface": "Exit interface",
+    "sourceIp": "Source IP",
+    "publicIp": "Public IP",
+    "target": "Target",
+    "splitTunnel": "Warning: traffic to the target leaves through \"{{target}}\" but the public IP lookup leaves through \"{{publicIface}}\" (split tunnel). The public IP shown may not apply to this target."
+  },
+  "portTest": {
+    "title": "TCP port test",
+    "target": "Target (IP or domain)",
+    "portSource": "Port list",
+    "ports": "Ports (e.g. 22,80,1000-2000)",
+    "timeout": "Timeout (ms)",
+    "concurrency": "Concurrent connections (max 1000)",
+    "start": "Start scan",
+    "stop": "Stop",
+    "results": "Results",
+    "all": "All",
+    "port": "Port",
+    "state": "State",
+    "service": "Service",
+    "errors": {
+      "invalidTarget": "Enter a valid IP address or domain name.",
+      "invalidPorts": "Invalid port list. Example: 22,80,443,8000-8100 (1–65535).",
+      "invalidPreset": "Invalid preset."
+    }
+  },
+  "presets": {
+    "custom": "Custom",
+    "top100": "Top 100 ports",
+    "web": "Web",
+    "mail": "Email",
+    "remote": "Remote desktop",
+    "database": "Database"
+  },
+  "state": {
+    "open": "Open",
+    "closed": "Closed",
+    "filtered": "Filtered",
+    "openHelp": "connection established",
+    "closedHelp": "the target refused the connection",
+    "filteredHelp": "no response, probably a firewall"
+  },
+  "config": {
+    "title": "IPv4 and DNS settings",
+    "privilegeNote": "Changes on this page require administrator privileges. You will see what will be done before it is applied; if you don't confirm within 15 seconds after the change, the previous settings are restored automatically.",
+    "interface": "Interface",
+    "current": "Current settings",
+    "mode": "Method",
+    "static": "Static",
+    "mask": "Mask or /prefix",
+    "gateway": "Gateway",
+    "dns": "DNS servers",
+    "dnsHint": "Separate DNS servers with commas (IPv4, up to 4). Leave empty to get DNS automatically (DHCP).",
+    "dnsAuto": "automatic",
+    "validate": "Validate",
+    "apply": "Apply…",
+    "conflict": "Another device on the network responds at {{ip}}. There may be an IP conflict.",
+    "errors": {
+      "invalidInterface": "Invalid interface.",
+      "invalidIp": "Invalid IP address.",
+      "invalidMask": "Invalid subnet mask.",
+      "invalidGateway": "Invalid gateway.",
+      "gatewayOutsideSubnet": "The gateway is not in the same subnet as this IP and mask.",
+      "invalidDns": "Invalid DNS server.",
+      "tooManyDns": "At most 4 DNS servers are allowed.",
+      "networkOrBroadcast": "The IP address cannot be the network or broadcast address."
+    },
+    "reviewTitle": "Confirm the change",
+    "reviewBody": "The following change will be made on \"{{iface}}\". The current settings are backed up first, then the operating system will ask for administrator privileges.",
+    "before": "Current settings",
+    "after": "New settings",
+    "rollbackNote": "If you don't confirm within 15 seconds after the change, the previous settings are restored automatically.",
+    "applyWithPrivilege": "Request privileges and apply",
+    "keepTitle": "Keep the new settings?",
+    "keepBody": "If you don't confirm, the previous settings will be restored in {{seconds}} seconds.",
+    "connectivityTesting": "Testing connectivity…",
+    "connectivityOk": "Connectivity test passed: the gateway responds.",
+    "connectivityFail": "Connectivity test failed: the gateway is unreachable.",
+    "keep": "Keep settings",
+    "revertNow": "Revert now",
+    "phase": {
+      "applying": "Applying the change…",
+      "confirmed": "The new settings are now permanent.",
+      "rollingBack": "Restoring the previous settings…",
+      "rolledBack": "No confirmation received; the previous settings were restored.",
+      "failed": "The operation failed."
+    },
+    "profiles": "Network profiles",
+    "noProfiles": "No saved profiles.",
+    "applyProfile": "Apply…",
+    "profileName": "Profile name",
+    "saveProfile": "Save form as profile",
+    "unsupported": {
+      "networkManagerMissing": "Network configuration is only supported on Linux distributions that use NetworkManager. NetworkManager is not running on this system.",
+      "generic": "Network configuration is not supported on this system."
+    }
+  },
+  "hosts": {
+    "intro": "System hosts file: {{path}}. NetKit only writes its own marked block and never touches lines outside it. A full backup is taken before every write and the DNS cache is flushed.",
+    "groups": "Entry groups",
+    "addGroup": "Add group",
+    "newGroup": "New group",
+    "groupName": "Group name",
+    "enabled": "Enabled",
+    "noGroups": "No groups yet.",
+    "saveGroups": "Save groups",
+    "apply": "Apply to system…",
+    "removeAll": "Remove all…",
+    "invalidEntry": "Invalid entry: {{entry}}. Each line must look like \"IP domain.name\".",
+    "conflict": "{{host}} points to different IPs ({{ips}}; groups: {{groups}})",
+    "outside": "Lines outside the block (read-only)",
+    "outsideHelp": "NetKit never modifies these lines.",
+    "backups": "Backups (last 20)",
+    "noBackups": "No backups yet.",
+    "restore": "Restore this backup",
+    "reviewTitle": "The hosts file will be changed",
+    "review": {
+      "apply": "Entries from enabled groups will be written to the NetKit block in the hosts file. The current file is backed up first, then the operating system will ask for administrator privileges and the DNS cache will be flushed.",
+      "removeAll": "The NetKit block will be removed from the hosts file; lines outside the block stay unchanged. A backup is taken first and administrator privileges are requested.",
+      "restore": "The hosts file will be replaced with the selected backup. The current file is backed up first and administrator privileges are requested."
+    },
+    "done": {
+      "apply": "The hosts file was updated and the DNS cache was flushed.",
+      "removeAll": "The NetKit block was removed.",
+      "restore": "The backup was restored."
+    }
+  },
+  "recovery": {
+    "message": "An unfinished network change was found on \"{{iface}}\". Do you want to return to the previous settings?",
+    "revert": "Return to previous settings",
+    "dismiss": "Ignore"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "language": "Language",
+    "theme": "Theme",
+    "system": "Follow system",
+    "light": "Light",
+    "dark": "Dark",
+    "privacy": "Privacy",
+    "publicIpHelp": "The only request NetKit makes on its own is the public IP lookup. If you turn it off, the app makes no outside requests at all.",
+    "publicIpEnabled": "Public IP lookup enabled",
+    "publicIpService": "Public IP service"
+  },
+  "firstRun": {
+    "title": "Before you start",
+    "body": "NetKit can scan ports and change network settings. Only scan networks you are authorized to test; operations that change system settings require administrator privileges and are recorded in a local audit log.",
+    "accept": "I understand"
+  }
+}
