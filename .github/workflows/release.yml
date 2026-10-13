@@ -10,21 +10,18 @@ on:
 permissions:
   contents: read
 
+# Aynı tag için iki run çakışmasın; çalışan run iptal edilmez, yenisi sırada bekler.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+  # Sürüm uyuşmazlığı 3 makinede (macOS dahil) değil, tek ucuz job'da yakalanır.
+  preflight:
+    name: Preflight
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
 
       - name: Tag ile package.json sürümü aynı olmalı
         if: startsWith(github.ref, 'refs/tags/v')
@@ -35,6 +32,44 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME, package.json sürümüyle ($expected) uyuşmuyor"
             exit 1
           fi
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: preflight
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        # Electron (npm ci) ve electron-builder (paketleme) indirmelerinin OS'e göre önbellek dizinleri.
+        include:
+          - os: windows-latest
+            electron-cache: |
+              ~/AppData/Local/electron/Cache
+              ~/AppData/Local/electron-builder/Cache
+          - os: macos-latest
+            electron-cache: |
+              ~/Library/Caches/electron
+              ~/Library/Caches/electron-builder
+          - os: ubuntu-latest
+            electron-cache: |
+              ~/.cache/electron
+              ~/.cache/electron-builder
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Electron önbelleği
+        uses: actions/cache@v6
+        with:
+          path: ${{ matrix.electron-cache }}
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
 
       - run: npm ci
 
@@ -52,11 +87,16 @@ jobs:
             dist/*.dmg
             dist/*.AppImage
           if-no-files-found: error
+          # Tag'de dosyalar yalnız release job'una taşınır, 1 gün yeter; elle çalıştırmada indirilebilsin diye 7 gün.
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 1 || 7 }}
+          # .exe/.dmg/.AppImage zaten sıkıştırılmış; yeniden sıkıştırmak yalnız süre harcar.
+          compression-level: 0
 
   release:
     name: Publish release
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     permissions:
       contents: write
