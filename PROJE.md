@@ -276,3 +276,4 @@ Fazlar sırayla ilerler; bir sonraki faza kapıdaki koşul sağlanınca geçilir
 - Form satırları `flex flex-wrap items-end` + alan başına `min-w-0 flex-[büyüme_küçülme_taban]` ile kurulur (alanlar alt kenardan hizalanır).
 - **Form elemanları:** yeni form elemanı yalnız `components/ui.tsx`'teki ortak çerçeveli bileşenlerle yapılır: `Input`, `Select`, `Textarea` (outlined, etiket çerçevenin üst kenarında), açma/kapama için `Switch`. Sayfalarda ham `<input>`, `<select>`, `<textarea>` yazılmaz (`tests/formFields.test.ts` kontrol eder). Tek satırlı alanlar 40 px; `Textarea` yüksekliği `className` ile serbest.
 - Kendiliğinden yapılan tek dış istek public IP sorgusudur (ayarlardan kapatılabilir).
+- **Dal + PR:** her iş ana klasörde ayrı bir dalda yapılır (`feat/`, `fix/`, `refactor/`, `docs/`, `ci/` önekli), worktree açılmaz; `main`e doğrudan commit ya da push yapılmaz. Güvenlik ve Kontrol onayından sonra PR açılır; merge Ertegun'dadır.
