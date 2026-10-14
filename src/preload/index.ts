@@ -49,6 +49,11 @@ const api: NetkitApi = {
     removeAll: () => invoke('hosts:removeAll'),
     restore: (id) => invoke('hosts:restore', id),
   },
+  smtp: {
+    records: () => invoke('smtp:records'),
+    test: (req) => invoke('smtp:test', req),
+    clear: () => invoke('smtp:clear'),
+  },
   settings: {
     get: () => invoke('settings:get'),
     set: (patch) => invoke('settings:set', patch),

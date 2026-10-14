@@ -4,6 +4,7 @@
     "portTest": "Port test",
     "config": "Network configuration",
     "hosts": "Hosts manager",
+    "smtp": "SMTP test",
     "settings": "Settings"
   },
   "common": {
@@ -178,6 +179,65 @@
       "apply": "The hosts file was updated and the DNS cache was flushed.",
       "removeAll": "The NetKit block was removed.",
       "restore": "The backup was restored."
+    }
+  },
+  "smtp": {
+    "title": "Test email",
+    "host": "SMTP server",
+    "port": "Port",
+    "security": "Security",
+    "securityOptions": {
+      "none": "None",
+      "starttls": "STARTTLS",
+      "tls": "SSL/TLS"
+    },
+    "username": "Username",
+    "password": "Password",
+    "from": "Sender (username if empty)",
+    "to": "Recipient",
+    "send": "Send test",
+    "sending": "Sending… (up to 15 s)",
+    "help": "A short email with the subject \"NetKit SMTP test\" is sent. The password is not saved or written to the log. Common ports: 587 (STARTTLS), 465 (SSL/TLS), 25 (None).",
+    "sent": "Email sent to {{to}}",
+    "results": "Attempts",
+    "clear": "Clear records",
+    "clearConfirm": "{{count}} records will be deleted. Continue?",
+    "empty": "No records.",
+    "filter": {
+      "all": "All",
+      "ok": "Succeeded",
+      "failed": "Failed"
+    },
+    "col": {
+      "time": "Time",
+      "server": "Server",
+      "addresses": "User / Recipient",
+      "status": "Status",
+      "error": "Error"
+    },
+    "errorKind": {
+      "connect": "Could not connect, or the server refused the connection",
+      "tls": "Could not establish a TLS/SSL connection",
+      "auth": "Authentication failed (wrong username or password?)",
+      "send": "The server did not accept the email",
+      "timeout": "Timed out: the server did not respond within 15 s"
+    },
+    "fieldErrors": {
+      "host": {
+        "required": "Server name is required.",
+        "invalid": "Enter a valid domain name or IP address."
+      },
+      "port": {
+        "invalid": "Port must be between 1 and 65535."
+      },
+      "from": {
+        "required": "Sender or username is required.",
+        "invalid": "Sender must be a valid email address (username is used if empty)."
+      },
+      "to": {
+        "required": "Recipient is required.",
+        "invalid": "Enter a valid email address."
+      }
     }
   },
   "recovery": {

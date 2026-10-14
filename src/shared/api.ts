@@ -15,6 +15,9 @@ import type {
   ScanProgress,
   ScanRequest,
   Settings,
+  SmtpRequest,
+  SmtpTestRecord,
+  SmtpTestResult,
 } from './types';
 
 export type Unsubscribe = () => void;
@@ -59,6 +62,11 @@ export interface NetkitApi {
     apply(): Promise<PrivilegedResult>;
     removeAll(): Promise<PrivilegedResult>;
     restore(backupId: string): Promise<PrivilegedResult>;
+  };
+  smtp: {
+    records(): Promise<SmtpTestRecord[]>;
+    test(req: SmtpRequest): Promise<SmtpTestResult>;
+    clear(): Promise<SmtpTestRecord[]>;
   };
   settings: {
     get(): Promise<Settings>;

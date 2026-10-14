@@ -3,13 +3,14 @@ import { app, BrowserWindow, ipcMain, nativeTheme, session, type IpcMainInvokeEv
 import { PUBLIC_IP_SERVICES } from '../core/publicIp';
 import { runHelper } from '../helper';
 import { getPlatform } from '../platform';
-import type { ChangeStatus, HostsGroup, Ipv4Config, NetProfile, PendingChangeJournal, ScanRequest, Settings } from '../shared/types';
+import type { ChangeStatus, HostsGroup, Ipv4Config, NetProfile, PendingChangeJournal, ScanRequest, Settings, SmtpTestRecord } from '../shared/types';
 import { AuditLog } from './audit';
 import { ConfigService } from './config';
 import { HostsService } from './hosts';
 import { NetworkMonitor } from './network';
 import { createElevator, HELPER_FLAG, PrivilegedRunner } from './privileged';
 import { ScanManager } from './scan';
+import { SmtpService } from './smtp';
 import { JsonFile } from './store';
 
 // --- Yetkili yardımcı modu: pencere açılmaz, istek işlenip çıkılır. ---
@@ -69,6 +70,7 @@ function startApp() {
     (s: ChangeStatus) => send('config:status', s),
   );
   const hosts = new HostsService(platform, privileged, new JsonFile<HostsGroup[]>(data('hosts-groups.json'), () => []), data('hosts-backups'));
+  const smtp = new SmtpService(new JsonFile<SmtpTestRecord[]>(data('smtp-log.json'), () => []));
   monitor.on('change', (s) => send('network:change', s));
 
   // Yalnızca uygulamanın kendi penceresinden gelen IPC kabul edilir.
@@ -102,6 +104,9 @@ function startApp() {
   handle('hosts:apply', () => hosts.apply());
   handle('hosts:removeAll', () => hosts.removeAll());
   handle('hosts:restore', (id: string) => hosts.restore(id));
+  handle('smtp:records', () => smtp.records());
+  handle('smtp:test', (req: unknown) => smtp.test(req));
+  handle('smtp:clear', () => smtp.clear());
   handle('settings:get', () => getSettings());
   handle('settings:set', async (patch: Partial<Settings>) => {
     const next = { ...(await getSettings()), ...sanitizeSettings(patch) };

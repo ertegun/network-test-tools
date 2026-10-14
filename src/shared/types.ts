@@ -166,3 +166,45 @@ export interface Settings {
   publicIpService: string;
   warningAccepted: boolean;
 }
+
+export type SmtpSecurity = 'none' | 'starttls' | 'tls';
+
+export interface SmtpRequest {
+  host: string;
+  port: number;
+  security: SmtpSecurity;
+  username: string;
+  /** Yalnız gönderimde kullanılır; kayda, loga ve hata metnine yazılmaz. */
+  password: string;
+  /** Boşsa kullanıcı adı kullanılır. */
+  from: string;
+  to: string;
+}
+
+export type SmtpField = 'host' | 'port' | 'from' | 'to';
+export type SmtpErrorKind = 'connect' | 'tls' | 'auth' | 'send' | 'timeout';
+
+/** Bir SMTP denemesinin kaydı. Parola alanı bilerek yok. */
+export interface SmtpTestRecord {
+  id: string;
+  time: string;
+  host: string;
+  port: number;
+  security: SmtpSecurity;
+  username: string;
+  from: string;
+  to: string;
+  ok: boolean;
+  ms: number;
+  errorKind?: SmtpErrorKind;
+  /** SMTP yanıt kodu (ör. 535). */
+  code?: number;
+  /** Sunucunun yanıt metni ya da bağlantı hatası. */
+  error?: string;
+}
+
+export interface SmtpTestResult {
+  /** Doluysa deneme yapılmadı; alan → hata anahtarı. */
+  errors: Partial<Record<SmtpField, string>>;
+  records: SmtpTestRecord[];
+}

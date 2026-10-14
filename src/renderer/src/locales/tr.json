@@ -4,6 +4,7 @@
     "portTest": "Port testi",
     "config": "Ağ yapılandırması",
     "hosts": "Hosts yönetimi",
+    "smtp": "SMTP test",
     "settings": "Ayarlar"
   },
   "common": {
@@ -178,6 +179,65 @@
       "apply": "Hosts dosyası güncellendi ve DNS önbelleği temizlendi.",
       "removeAll": "NetKit bloğu kaldırıldı.",
       "restore": "Yedek geri yüklendi."
+    }
+  },
+  "smtp": {
+    "title": "Test e-postası",
+    "host": "SMTP sunucusu",
+    "port": "Port",
+    "security": "Güvenlik",
+    "securityOptions": {
+      "none": "Yok",
+      "starttls": "STARTTLS",
+      "tls": "SSL/TLS"
+    },
+    "username": "Kullanıcı adı",
+    "password": "Parola",
+    "from": "Gönderen (boşsa kullanıcı adı)",
+    "to": "Alıcı",
+    "send": "Test gönder",
+    "sending": "Gönderiliyor… (en fazla 15 sn)",
+    "help": "Konusu \"NetKit SMTP test\" olan kısa bir e-posta gönderilir. Parola kaydedilmez ve loga yazılmaz. Yaygın portlar: 587 (STARTTLS), 465 (SSL/TLS), 25 (Yok).",
+    "sent": "E-posta gönderildi: {{to}}",
+    "results": "Denemeler",
+    "clear": "Kayıtları temizle",
+    "clearConfirm": "{{count}} kayıt silinecek. Devam edilsin mi?",
+    "empty": "Kayıt yok.",
+    "filter": {
+      "all": "Tümü",
+      "ok": "Başarılı",
+      "failed": "Başarısız"
+    },
+    "col": {
+      "time": "Zaman",
+      "server": "Sunucu",
+      "addresses": "Kullanıcı / Alıcı",
+      "status": "Durum",
+      "error": "Hata"
+    },
+    "errorKind": {
+      "connect": "Sunucuya bağlanılamadı ya da sunucu bağlantıyı reddetti",
+      "tls": "TLS/SSL bağlantısı kurulamadı",
+      "auth": "Kimlik doğrulama başarısız (kullanıcı adı ya da parola hatalı olabilir)",
+      "send": "Sunucu e-postayı kabul etmedi",
+      "timeout": "Zaman aşımı: sunucu 15 sn içinde yanıt vermedi"
+    },
+    "fieldErrors": {
+      "host": {
+        "required": "Sunucu adı gerekli.",
+        "invalid": "Geçerli bir alan adı ya da IP adresi girin."
+      },
+      "port": {
+        "invalid": "Port 1–65535 arasında olmalı."
+      },
+      "from": {
+        "required": "Gönderen ya da kullanıcı adı gerekli.",
+        "invalid": "Gönderen geçerli bir e-posta adresi olmalı (boşsa kullanıcı adı kullanılır)."
+      },
+      "to": {
+        "required": "Alıcı gerekli.",
+        "invalid": "Geçerli bir e-posta adresi girin."
+      }
     }
   },
   "recovery": {
