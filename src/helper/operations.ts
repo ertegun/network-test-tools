@@ -6,7 +6,7 @@ import { applyBlock, isValidEntry, MAX_HOSTS_FILE_BYTES } from '../core/hosts';
 import { isValidInterfaceName, isValidIPv4, normalizeMask, validateStaticConfig } from '../core/validate';
 import type { Platform } from '../platform';
 import type { HostsEntry, Ipv4Config } from '../shared/types';
-import { runConfirmableChange, type SessionContext } from './change';
+import { applyDnsChecked, runConfirmableChange, type SessionContext } from './change';
 
 export class InvalidParamsError extends Error {}
 
@@ -31,14 +31,18 @@ function parseInterface(v: unknown): string {
   return v;
 }
 
+function parseDns(v: unknown): string[] {
+  if (!Array.isArray(v) || v.some((d) => typeof d !== 'string' || !isValidIPv4(d)) || v.length > 4) {
+    throw new InvalidParamsError('geçersiz DNS sunucusu');
+  }
+  return v as string[];
+}
+
 export function parseIpv4Config(raw: unknown): Ipv4Config {
   const o = obj(raw);
   onlyKeys(o, ['mode', 'ip', 'mask', 'gateway', 'dns']);
   if (o.mode !== 'dhcp' && o.mode !== 'static') throw new InvalidParamsError('geçersiz mod');
-  if (!Array.isArray(o.dns) || o.dns.some((d) => typeof d !== 'string' || !isValidIPv4(d)) || o.dns.length > 4) {
-    throw new InvalidParamsError('geçersiz DNS sunucusu');
-  }
-  const dns = o.dns as string[];
+  const dns = parseDns(o.dns);
   if (o.mode === 'dhcp') return { mode: 'dhcp', dns };
   for (const k of ['ip', 'mask', 'gateway'] as const) {
     if (o[k] !== undefined && typeof o[k] !== 'string') throw new InvalidParamsError(`geçersiz ${k}`);
@@ -76,6 +80,12 @@ function parseIfaceConfig(raw: unknown) {
   return { iface: parseInterface(o.interface), config: parseIpv4Config(o.config) };
 }
 
+function parseIfaceDns(raw: unknown) {
+  const o = obj(raw);
+  onlyKeys(o, ['interface', 'dns']);
+  return { iface: parseInterface(o.interface), dns: parseDns(o.dns) };
+}
+
 export const OPERATIONS = {
   /** Onaylı değişiklik: yedek, uygulama ve 15 sn geri alma aynı yetkili süreçte. */
   'ipv4.change': defineOp({
@@ -89,6 +99,22 @@ export const OPERATIONS = {
     parse: parseIfaceConfig,
     async run(p: { iface: string; config: Ipv4Config }, platform: Platform) {
       await platform.applyIpv4(p.iface, p.config);
+      return null;
+    },
+  }),
+  /** Onaylı DNS değişikliği: yalnızca DNS yazılır, adres ayarına dokunulmaz; geri almada eski DNS yazılır. */
+  'dns.change': defineOp({
+    parse: parseIfaceDns,
+    async run(p: { iface: string; dns: string[] }, platform: Platform, ctx: SessionContext) {
+      const next = { ...(await platform.readIpv4Config(p.iface)), dns: p.dns };
+      return runConfirmableChange(p.iface, next, platform, ctx, (i, c) => applyDnsChecked(platform, i, c.dns));
+    },
+  }),
+  /** Yalnızca DNS değişikliğinin çökme sonrası kurtarmasında önceki DNS'i geri yüklemek için. */
+  'dns.apply': defineOp({
+    parse: parseIfaceDns,
+    async run(p: { iface: string; dns: string[] }, platform: Platform) {
+      await platform.applyDns(p.iface, p.dns);
       return null;
     },
   }),

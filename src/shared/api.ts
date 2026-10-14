@@ -4,6 +4,7 @@
 import type {
   ChangeStatus,
   ContextStrip,
+  DnsEntry,
   HostsGroup,
   HostsView,
   Ipv4Config,
@@ -52,6 +53,15 @@ export interface NetkitApi {
     profiles(): Promise<NetProfile[]>;
     saveProfile(p: NetProfile): Promise<NetProfile[]>;
     deleteProfile(name: string): Promise<NetProfile[]>;
+  };
+  dns: {
+    /** Hazır kayıtlar ve kullanıcı kayıtları. */
+    list(): Promise<DnsEntry[]>;
+    /** Ekler ya da (id varsa) günceller; geçersizse hata kodları virgülle ayrılmış Error. */
+    save(entry: { id?: string; name: string; primary: string; secondary?: string }): Promise<DnsEntry[]>;
+    remove(id: string): Promise<DnsEntry[]>;
+    /** Yalnızca DNS'i değiştirir (boş liste: DHCP); durum config.onStatus ile gelir, onay config.confirm ile. */
+    apply(iface: string, dns: string[]): Promise<ChangeStatus>;
   };
   hosts: {
     view(): Promise<HostsView>;

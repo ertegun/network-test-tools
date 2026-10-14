@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChangeStatus, Ipv4Config, NetProfile, NetworkSnapshot } from '../../../shared/types';
 import { iconDelete, iconLock, iconPlay, iconWarning } from '../components/icons';
+import { KeepChangeDialog } from '../components/KeepChangeDialog';
 import { Alert, Button, Card, Dialog, Field, Icon, IconButton, Input, Select } from '../components/ui';
 import { errorMessage } from '../lib/format';
 
@@ -37,7 +38,6 @@ export default function NetConfig({ snapshot }: { snapshot?: NetworkSnapshot }) 
   const [conflict, setConflict] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [status, setStatus] = useState<ChangeStatus>();
-  const [now, setNow] = useState(Date.now());
   const [profiles, setProfiles] = useState<NetProfile[]>([]);
   const [profileName, setProfileName] = useState('');
   const [error, setError] = useState<string>();
@@ -66,12 +66,6 @@ export default function NetConfig({ snapshot }: { snapshot?: NetworkSnapshot }) 
       })
       .catch((err) => setError(errorMessage(err)));
   }, [iface, status?.phase]);
-
-  useEffect(() => {
-    if (status?.phase !== 'awaitingConfirm') return;
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
-  }, [status?.phase]);
 
   const validate = async (cfg = toConfig(form)) => {
     setError(undefined);
@@ -108,7 +102,6 @@ export default function NetConfig({ snapshot }: { snapshot?: NetworkSnapshot }) 
     return <Alert color="amber" icon={iconWarning}>{t(`config.unsupported.${support.reason ?? 'generic'}`)}</Alert>;
   }
 
-  const remaining = status?.deadline ? Math.max(0, Math.ceil((status.deadline - now) / 1000)) : 0;
   const busy = status?.phase === 'applying' || status?.phase === 'awaitingConfirm' || status?.phase === 'rollingBack';
 
   return (
@@ -215,31 +208,7 @@ export default function NetConfig({ snapshot }: { snapshot?: NetworkSnapshot }) 
         <p className="mt-3">{t('config.rollbackNote')}</p>
       </Dialog>
 
-      <Dialog
-        open={status?.phase === 'awaitingConfirm'}
-        onClose={() => undefined}
-        dismissible={false}
-        title={t('config.keepTitle')}
-        footer={
-          <>
-            <Button variant="outlined" color="red" onClick={() => void window.netkit.config.revert()}>
-              {t('config.revertNow')}
-            </Button>
-            <Button color="green" onClick={() => void window.netkit.config.confirm()}>
-              {t('config.keep')}
-            </Button>
-          </>
-        }
-      >
-        <p className="text-base">{t('config.keepBody', { seconds: remaining })}</p>
-        <p className="mt-2">
-          {status?.connectivityOk === undefined
-            ? t('config.connectivityTesting')
-            : status.connectivityOk
-              ? t('config.connectivityOk')
-              : t('config.connectivityFail')}
-        </p>
-      </Dialog>
+      <KeepChangeDialog status={status} />
     </div>
   );
 }

@@ -38,14 +38,28 @@ export async function verifyConnectivity(platform: Platform, iface: string, cfg:
   return platform.ping(gateway, 1500).catch(() => false);
 }
 
+/** Yalnızca DNS'i yazar ve geri okur; okunan değer yazılanla uyuşmazsa hata verir (geri alma tetiklenir). */
+export async function applyDnsChecked(platform: Platform, iface: string, dns: string[]): Promise<void> {
+  await platform.applyDns(iface, dns);
+  const actual = (await platform.readIpv4Config(iface)).dns;
+  if (actual.join(',') !== dns.join(',')) throw new Error(`dnsMismatch: ${actual.join(', ') || '-'}`);
+}
+
 /** Değişikliği uygular ve onay/geri alma sonuçlanana kadar bekler. Son durumu döndürür. */
-export async function runConfirmableChange(iface: string, next: Ipv4Config, platform: Platform, ctx: SessionContext): Promise<ChangeStatus> {
+export async function runConfirmableChange(
+  iface: string,
+  next: Ipv4Config,
+  platform: Platform,
+  ctx: SessionContext,
+  // Hem yeni ayarı hem geri almada eski ayarı yazar; DNS değişikliğinde yalnızca DNS yazılır.
+  apply: (iface: string, cfg: Ipv4Config) => Promise<void> = (i, c) => platform.applyIpv4(i, c),
+): Promise<ChangeStatus> {
   let finish!: (s: ChangeStatus) => void;
   const done = new Promise<ChangeStatus>((r) => (finish = r));
   const change = new ConfirmableChange(
     {
       snapshot: (i) => platform.readIpv4Config(i),
-      apply: (i, c) => platform.applyIpv4(i, c),
+      apply,
       verifyConnectivity: (i, c) => verifyConnectivity(platform, i, c),
       writeJournal: (j) => ctx.saveJournal(j),
       clearJournal: () => ctx.saveJournal(null),

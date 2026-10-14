@@ -84,13 +84,16 @@ export function win32Ipv4Commands(iface: string, cfg: Ipv4Config): string[][] {
     if (cfg.gateway) cmd.push(cfg.gateway);
     cmds.push(cmd);
   }
-  if (cfg.dns.length === 0) {
-    cmds.push(['netsh', 'interface', 'ipv4', 'set', 'dnsservers', iface, 'dhcp']);
-  } else {
-    cmds.push(['netsh', 'interface', 'ipv4', 'set', 'dnsservers', iface, 'static', cfg.dns[0], 'primary', 'validate=no']);
-    cfg.dns.slice(1).forEach((d, i) => cmds.push(['netsh', 'interface', 'ipv4', 'add', 'dnsservers', iface, d, `index=${i + 2}`, 'validate=no']));
-  }
-  return cmds;
+  return [...cmds, ...win32DnsCommands(iface, cfg.dns)];
+}
+
+/** Yalnızca DNS sunucuları; boş liste DNS'i DHCP'ye döndürür. Adres ayarına dokunmaz. */
+export function win32DnsCommands(iface: string, dns: string[]): string[][] {
+  if (dns.length === 0) return [['netsh', 'interface', 'ipv4', 'set', 'dnsservers', iface, 'dhcp']];
+  return [
+    ['netsh', 'interface', 'ipv4', 'set', 'dnsservers', iface, 'static', dns[0], 'primary', 'validate=no'],
+    ...dns.slice(1).map((d, i) => ['netsh', 'interface', 'ipv4', 'add', 'dnsservers', iface, d, `index=${i + 2}`, 'validate=no']),
+  ];
 }
 
 export function createWin32(runner: Runner = run): Platform {
@@ -123,6 +126,7 @@ export function createWin32(runner: Runner = run): Platform {
       return r.code === 0 && /TTL=/i.test(r.stdout);
     },
     applyIpv4: (iface, cfg) => runAll(runner, win32Ipv4Commands(iface, cfg), { timeoutMs: 30_000 }),
+    applyDns: (iface, dns) => runAll(runner, win32DnsCommands(iface, dns), { timeoutMs: 30_000 }),
     flushDns: () => runAll(runner, [['ipconfig', '/flushdns']]),
   };
 }

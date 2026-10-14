@@ -10,6 +10,7 @@ export { default as iconDelete } from '@iconify-icons/material-symbols/delete-ou
 export { default as iconDescription } from '@iconify-icons/material-symbols/description';
 export { default as iconDns } from '@iconify-icons/material-symbols/dns';
 export { default as iconDownload } from '@iconify-icons/material-symbols/download';
+export { default as iconEdit } from '@iconify-icons/material-symbols/edit-outline';
 export { default as iconEthernet } from '@iconify-icons/material-symbols/settings-ethernet';
 export { default as iconHistory } from '@iconify-icons/material-symbols/history';
 export { default as iconInfo } from '@iconify-icons/material-symbols/info-outline';
