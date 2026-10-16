@@ -57,7 +57,8 @@
     "sourceIp": "Source IP",
     "publicIp": "Public IP",
     "target": "Target",
-    "splitTunnel": "Warning: traffic to the target leaves through \"{{target}}\" but the public IP lookup leaves through \"{{publicIface}}\" (split tunnel). The public IP shown may not apply to this target."
+    "splitTunnel": "Warning: traffic to the target leaves through \"{{target}}\" but the public IP lookup leaves through \"{{publicIface}}\" (split tunnel). The public IP shown may not apply to this target.",
+    "path": "Scan path"
   },
   "portTest": {
     "title": "TCP port test",
@@ -75,10 +76,21 @@
     "service": "Service",
     "allWarning": "Scanning all ports (65,535 ports) may take up to about {{duration}} in the worst case; the time depends on the timeout and concurrency. You can stop the scan at any time. Only open ports are listed in the results.",
     "openFound": "{{count}} open",
+    "path": "Scan path",
+    "paths": {
+      "direct": "Direct",
+      "tor": "Tor (127.0.0.1:9050)"
+    },
+    "sourceIp": "Source IP",
+    "sourceAuto": "Automatic (chosen by the OS)",
+    "torHint": "On the Tor path, connections leave through a Tor exit node, so the source IP cannot be chosen. You need to run Tor (127.0.0.1:9050) yourself. Tor is slow; set the timeout to at least 10000 ms.",
     "errors": {
       "invalidTarget": "Enter a valid IP address or domain name.",
       "invalidPorts": "Invalid port list. Example: 22,80,443,8000-8100 (1–65535).",
-      "invalidPreset": "Invalid preset."
+      "invalidPreset": "Invalid preset.",
+      "torUnavailable": "Tor is unreachable (127.0.0.1:9050). Make sure Tor is running.",
+      "invalidSourceIp": "The source IP is not on any of this computer's network interfaces.",
+      "invalidPath": "Invalid scan path."
     }
   },
   "presets": {
@@ -96,7 +108,9 @@
     "filtered": "Filtered",
     "openHelp": "connection established",
     "closedHelp": "the target refused the connection",
-    "filteredHelp": "no response, probably a firewall"
+    "filteredHelp": "no response, probably a firewall",
+    "proxyError": "Proxy error",
+    "proxyErrorHelp": "no response through Tor or timed out; it does not mean the port is closed"
   },
   "config": {
     "title": "IPv4 and DNS settings",

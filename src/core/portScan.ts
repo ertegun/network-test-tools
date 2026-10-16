@@ -3,12 +3,17 @@
 import { Socket } from 'node:net';
 import type { PortResult, PortState } from '../shared/types';
 import { serviceName } from './ports';
+import { socksProbe, type SocksProxy } from './socks5';
 
 export interface ScanOptions {
   host: string;
   ports: number[];
   timeoutMs?: number;
   concurrency?: number;
+  /** Bağlantının çıkacağı yerel IP (yalnız doğrudan yolda). */
+  localAddress?: string;
+  /** Verilirse bağlantılar bu SOCKS5 proxy üzerinden kurulur. */
+  proxy?: SocksProxy;
   signal?: AbortSignal;
   onResult?: (r: PortResult, done: number, total: number) => void;
 }
@@ -32,7 +37,7 @@ export function clampTimeout(ms: number | undefined): number {
   return Math.min(Math.max(Math.floor(ms), MIN_TIMEOUT_MS), MAX_TIMEOUT_MS);
 }
 
-export function probePort(host: string, port: number, timeoutMs: number, signal?: AbortSignal): Promise<PortResult> {
+export function probePort(host: string, port: number, timeoutMs: number, signal?: AbortSignal, localAddress?: string): Promise<PortResult> {
   return new Promise((resolve) => {
     const started = performance.now();
     const socket = new Socket();
@@ -50,8 +55,14 @@ export function probePort(host: string, port: number, timeoutMs: number, signal?
     socket.once('connect', () => finish('open'));
     socket.once('timeout', () => finish('filtered'));
     socket.once('error', (err: NodeJS.ErrnoException) => finish(CLOSED_CODES.has(err.code ?? '') ? 'closed' : 'filtered'));
-    socket.connect({ host, port });
+    socket.connect({ host, port, localAddress });
   });
+}
+
+export async function probeViaProxy(proxy: SocksProxy, host: string, port: number, timeoutMs: number, signal?: AbortSignal): Promise<PortResult> {
+  const started = performance.now();
+  const state = await socksProbe(proxy, host, port, timeoutMs, signal);
+  return { port, state, ms: Math.round(performance.now() - started), service: serviceName(port) };
 }
 
 /** Portları eşzamanlılık sınırıyla tarar. İptal edilirse o ana kadarki sonuçları döndürür. */
@@ -65,7 +76,9 @@ export async function scanPorts(opts: ScanOptions): Promise<{ results: PortResul
   const worker = async () => {
     while (next < opts.ports.length && !opts.signal?.aborted) {
       const port = opts.ports[next++];
-      const r = await probePort(opts.host, port, timeoutMs, opts.signal);
+      const r = opts.proxy
+        ? await probeViaProxy(opts.proxy, opts.host, port, timeoutMs, opts.signal)
+        : await probePort(opts.host, port, timeoutMs, opts.signal, opts.localAddress);
       if (opts.signal?.aborted) return;
       results.push(r);
       done++;

@@ -109,7 +109,7 @@ export default function App() {
         )}
         <h1 className="mb-4 text-xl font-semibold">{t(`nav.${page}`)}</h1>
         {page === 'dashboard' && <Dashboard snapshot={snapshot} onSnapshot={setSnapshot} />}
-        {page === 'portTest' && <PortTest />}
+        {page === 'portTest' && <PortTest snapshot={snapshot} />}
         {page === 'config' && <NetConfig snapshot={snapshot} />}
         {page === 'dns' && <Dns snapshot={snapshot} />}
         {page === 'hosts' && <Hosts />}

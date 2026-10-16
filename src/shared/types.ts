@@ -43,7 +43,11 @@ export interface NetworkSnapshot {
   updatedAt: string;
 }
 
-export type PortState = 'open' | 'closed' | 'filtered';
+/** proxyError: proxy yolunda zaman aşımı ya da proxy hatası; "kapalı" anlamına gelmez. */
+export type PortState = 'open' | 'closed' | 'filtered' | 'proxyError';
+
+/** direct: işletim sisteminin yönlendirmesi (isteğe bağlı kaynak IP); tor: yerel Tor SOCKS5 proxy'si. */
+export type ScanPath = 'direct' | 'tor';
 
 export interface PortResult {
   port: number;
@@ -64,6 +68,7 @@ export interface ContextStrip {
   publicIpService?: string;
   publicIpInterface?: string;
   splitTunnel: boolean;
+  path?: ScanPath;
 }
 
 export type PortPresetId = 'top100' | 'web' | 'mail' | 'remote' | 'database' | 'all';
@@ -74,6 +79,9 @@ export interface ScanRequest {
   preset?: PortPresetId;
   timeoutMs?: number;
   concurrency?: number;
+  path?: ScanPath;
+  /** Yalnızca direct yolda; makinedeki bir IPv4 arayüz adresi olmalı. */
+  sourceIp?: string;
 }
 
 export interface ScanProgress {

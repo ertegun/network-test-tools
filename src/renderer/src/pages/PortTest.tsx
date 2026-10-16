@@ -1,12 +1,12 @@
 // M2 — Port testi ve bağlam şeridi.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ContextStrip, PortPresetId, PortResult, PortState } from '../../../shared/types';
+import type { ContextStrip, NetworkSnapshot, PortPresetId, PortResult, PortState, ScanPath } from '../../../shared/types';
 import { iconCopy, iconDownload, iconInfo, iconPlay, iconStop, iconWarning } from '../components/icons';
 import { Alert, Button, Card, Chip, Field, Icon, IconButton, InfoTip, Input, Progress, Select } from '../components/ui';
 import { downloadText, errorMessage, formatDateTime, formatDuration, toCsv } from '../lib/format';
 
-const STATE_COLOR: Record<PortState, 'green' | 'red' | 'amber'> = { open: 'green', closed: 'red', filtered: 'amber' };
+const STATE_COLOR: Record<PortState, 'green' | 'red' | 'amber' | 'blue-gray'> = { open: 'green', closed: 'red', filtered: 'amber', proxyError: 'blue-gray' };
 type PortSource = 'custom' | PortPresetId;
 // Ghost uyarının renkli metni koyu temada kendi zemininde AA kontrastı sağlamıyor (amber ≈2.4:1).
 const ALERT_DARK = 'dark:!text-gray-100';
@@ -24,6 +24,7 @@ export function ContextBar({ ctx }: { ctx: ContextStrip }) {
           {ctx.interfaceName ?? '—'}
         </Field>
         <Field label={t('context.sourceIp')}>{ctx.sourceIp}</Field>
+        {ctx.path === 'tor' && <Field label={t('context.path')}>{t('portTest.paths.tor')}</Field>}
         <Field label={t('context.publicIp')}>{ctx.publicIp ? `${ctx.publicIp} (${ctx.publicIpService})` : '—'}</Field>
         <Field label={t('context.target')}>
           {ctx.target}
@@ -39,13 +40,15 @@ export function ContextBar({ ctx }: { ctx: ContextStrip }) {
   );
 }
 
-export default function PortTest() {
+export default function PortTest({ snapshot }: { snapshot?: NetworkSnapshot }) {
   const { t } = useTranslation();
   const [target, setTarget] = useState('');
   const [source, setSource] = useState<PortSource>('top100');
   const [ports, setPorts] = useState('1-1024');
   const [timeoutMs, setTimeoutMs] = useState('2000');
   const [concurrency, setConcurrency] = useState('200');
+  const [path, setPath] = useState<ScanPath>('direct');
+  const [sourceIp, setSourceIp] = useState(''); // boş: işletim sistemi seçer
   const [scanId, setScanId] = useState<string>();
   const [ctx, setCtx] = useState<ContextStrip>();
   const [results, setResults] = useState<PortResult[]>([]);
@@ -92,6 +95,8 @@ export default function PortTest() {
         preset: source === 'custom' ? undefined : source,
         timeoutMs: Number(timeoutMs) || undefined,
         concurrency: Number(concurrency) || undefined,
+        path,
+        sourceIp: path === 'direct' && sourceIp ? sourceIp : undefined,
       });
       scanRef.current = r.scanId;
       setScanId(r.scanId);
@@ -109,7 +114,7 @@ export default function PortTest() {
 
   const sorted = useMemo(() => [...results].sort((a, b) => a.port - b.port), [results]);
   const counts = useMemo(() => {
-    const c = { open: 0, closed: 0, filtered: 0 };
+    const c = { open: 0, closed: 0, filtered: 0, proxyError: 0 };
     results.forEach((r) => c[r.state]++);
     return c;
   }, [results]);
@@ -128,6 +133,7 @@ export default function PortTest() {
           [t('context.hostname'), ctx.hostname],
           [t('context.interface'), ctx.interfaceName ?? ''],
           [t('context.sourceIp'), ctx.sourceIp],
+          [t('context.path'), t(`portTest.paths.${ctx.path ?? 'direct'}`)],
           [t('context.publicIp'), ctx.publicIp ?? ''],
           [t('context.target'), `${ctx.target} (${ctx.resolvedIp})`],
           [],
@@ -163,7 +169,28 @@ export default function PortTest() {
           <div className="min-w-0 flex-[1_1_12rem]">
             <Input label={t('portTest.concurrency')} value={concurrency} onChange={setConcurrency} type="number" />
           </div>
+          <div className="min-w-0 flex-[1_1_10rem]">
+            <Select<ScanPath>
+              label={t('portTest.path')}
+              value={path}
+              onChange={setPath}
+              options={(['direct', 'tor'] as ScanPath[]).map((v) => ({ value: v, label: t(`portTest.paths.${v}`) }))}
+            />
+          </div>
+          <div className="min-w-0 flex-[1_1_14rem]">
+            <Select
+              label={t('portTest.sourceIp')}
+              value={path === 'direct' ? sourceIp : ''}
+              onChange={setSourceIp}
+              disabled={path !== 'direct'}
+              options={[
+                { value: '', label: t('portTest.sourceAuto') },
+                ...(snapshot?.interfaces ?? []).flatMap((i) => i.ipv4.map((a) => ({ value: a.address, label: `${a.address} (${i.name})` }))),
+              ]}
+            />
+          </div>
         </div>
+        {path === 'tor' && <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">{t('portTest.torHint')}</p>}
         <div className="mt-3 flex items-center gap-2">
           {scanId ? (
             <Button color="red" onClick={stop}>
@@ -195,6 +222,12 @@ export default function PortTest() {
         {error && <Alert color="red" className={`mt-3 ${ALERT_DARK}`}>{error}</Alert>}
         <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
           <b>{t('state.open')}</b>: {t('state.openHelp')} · <b>{t('state.closed')}</b>: {t('state.closedHelp')} · <b>{t('state.filtered')}</b>: {t('state.filteredHelp')}
+          {path === 'tor' && (
+            <>
+              {' · '}
+              <b>{t('state.proxyError')}</b>: {t('state.proxyErrorHelp')}
+            </>
+          )}
         </p>
       </Card>
 
@@ -210,7 +243,7 @@ export default function PortTest() {
         >
           {!openOnly && (
             <div className="mb-2 flex flex-wrap gap-2">
-              {(['all', 'open', 'closed', 'filtered'] as const).map((f) => (
+              {(['all', 'open', 'closed', 'filtered', 'proxyError'] as const).filter((f) => f !== 'proxyError' || counts.proxyError > 0).map((f) => (
                 <button key={f} type="button" onClick={() => setFilter(f)} className={filter === f ? 'opacity-100' : 'opacity-60'}>
                   <Chip
                     value={`${f === 'all' ? t('portTest.all') : t(`state.${f}`)} (${f === 'all' ? results.length : counts[f]})`}
@@ -222,7 +255,7 @@ export default function PortTest() {
             </div>
           )}
           <div className="max-h-[45vh] overflow-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm dark:text-gray-100">
               <thead className="sticky top-0 bg-white text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                 <tr>
                   <th className="py-1 pr-4">{t('portTest.port')}</th>

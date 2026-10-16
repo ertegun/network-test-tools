@@ -4,11 +4,13 @@ import { randomUUID } from 'node:crypto';
 import { hostname, networkInterfaces } from 'node:os';
 import { parsePortList, PORT_PRESETS } from '../core/ports';
 import { scanPorts } from '../core/portScan';
+import { socksReachable, TOR_PROXY } from '../core/socks5';
 import { isSplitTunnel, routeTo } from '../core/route';
 import { isValidTarget } from '../core/validate';
-import type { ContextStrip, NetworkSnapshot, ScanFinished, ScanProgress, ScanRequest } from '../shared/types';
+import type { ContextStrip, NetworkSnapshot, ScanFinished, ScanPath, ScanProgress, ScanRequest } from '../shared/types';
 
 const PROGRESS_FLUSH_MS = 100;
+const TOR_CHECK_MS = 3000;
 
 export interface ScanEvents {
   progress(batch: ScanProgress[]): void;
@@ -41,6 +43,18 @@ export function portsFor(req: ScanRequest): number[] {
   return parsePortList(req.ports ?? '');
 }
 
+/** Yol ve kaynak IP'yi doğrular. Kaynak IP yalnızca bu makinedeki bir IPv4 arayüz adresi olabilir. */
+export function scanRoute(req: ScanRequest, ifaces = networkInterfaces()): { path: ScanPath; sourceIp?: string; interfaceName?: string } {
+  const path = req.path ?? 'direct';
+  if (path !== 'direct' && path !== 'tor') throw new Error('invalidPath');
+  if (!req.sourceIp) return { path };
+  if (path !== 'direct') throw new Error('invalidSourceIp');
+  for (const [name, addrs] of Object.entries(ifaces)) {
+    if (addrs?.some((a) => a.family === 'IPv4' && a.address === req.sourceIp)) return { path, sourceIp: req.sourceIp, interfaceName: name };
+  }
+  throw new Error('invalidSourceIp');
+}
+
 export class ScanManager {
   private readonly running = new Map<string, AbortController>();
 
@@ -55,8 +69,11 @@ export class ScanManager {
     } catch {
       throw new Error('invalidPorts');
     }
+    const route = scanRoute(req);
+    if (route.path === 'tor' && !(await socksReachable(TOR_PROXY, TOR_CHECK_MS))) throw new Error('torUnavailable');
     // Hedef bir kez çözülür; her bağlantı aynı IP'ye gider.
-    const context = await buildContext(target, snapshot);
+    const context = { ...(await buildContext(target, snapshot)), path: route.path };
+    if (route.sourceIp) Object.assign(context, { sourceIp: route.sourceIp, interfaceName: route.interfaceName });
     const scanId = randomUUID();
     const controller = new AbortController();
     this.running.set(scanId, controller);
@@ -74,6 +91,8 @@ export class ScanManager {
       ports,
       timeoutMs: req.timeoutMs,
       concurrency: req.concurrency,
+      localAddress: route.sourceIp,
+      proxy: route.path === 'tor' ? TOR_PROXY : undefined,
       signal: controller.signal,
       onResult: (result, done, total) => pending.push({ scanId, result, done, total }),
     })

@@ -57,7 +57,8 @@
     "sourceIp": "Kaynak IP",
     "publicIp": "Public IP",
     "target": "Hedef",
-    "splitTunnel": "Dikkat: Hedefe giden trafik \"{{target}}\" arayüzünden, public IP sorgusu ise \"{{publicIface}}\" arayüzünden çıkıyor (split-tunnel). Gösterilen public IP bu hedef için geçerli olmayabilir."
+    "splitTunnel": "Dikkat: Hedefe giden trafik \"{{target}}\" arayüzünden, public IP sorgusu ise \"{{publicIface}}\" arayüzünden çıkıyor (split-tunnel). Gösterilen public IP bu hedef için geçerli olmayabilir.",
+    "path": "Tarama yolu"
   },
   "portTest": {
     "title": "TCP port testi",
@@ -75,10 +76,21 @@
     "service": "Servis",
     "allWarning": "Tüm portlar (65.535 port) taraması en kötü durumda yaklaşık {{duration}} sürebilir; süre zaman aşımı ve eşzamanlı bağlantı sayısına bağlıdır. Tarama istendiğinde durdurulabilir. Sonuçlarda yalnızca açık portlar listelenir.",
     "openFound": "{{count}} açık",
+    "path": "Tarama yolu",
+    "paths": {
+      "direct": "Doğrudan",
+      "tor": "Tor (127.0.0.1:9050)"
+    },
+    "sourceIp": "Kaynak IP",
+    "sourceAuto": "Otomatik (işletim sistemi seçer)",
+    "torHint": "Tor yolunda bağlantı Tor çıkış düğümünden çıkar, bu yüzden kaynak IP seçilemez. Tor'u (127.0.0.1:9050) sizin çalıştırmanız gerekir. Tor yavaştır; zaman aşımını en az 10000 ms yapın.",
     "errors": {
       "invalidTarget": "Geçerli bir IP adresi veya alan adı girin.",
       "invalidPorts": "Port listesi geçersiz. Örnek: 22,80,443,8000-8100 (1–65535).",
-      "invalidPreset": "Geçersiz hazır liste."
+      "invalidPreset": "Geçersiz hazır liste.",
+      "torUnavailable": "Tor erişilemiyor (127.0.0.1:9050). Tor'un çalıştığından emin olun.",
+      "invalidSourceIp": "Kaynak IP bu bilgisayarın ağ arayüzlerinde yok.",
+      "invalidPath": "Geçersiz tarama yolu."
     }
   },
   "presets": {
@@ -96,7 +108,9 @@
     "filtered": "Filtrelenmiş",
     "openHelp": "bağlantı kuruldu",
     "closedHelp": "hedef bağlantıyı reddetti",
-    "filteredHelp": "yanıt yok, muhtemelen güvenlik duvarı"
+    "filteredHelp": "yanıt yok, muhtemelen güvenlik duvarı",
+    "proxyError": "Proxy hatası",
+    "proxyErrorHelp": "Tor üzerinden yanıt yok ya da zaman aşımı, port kapalı demek değildir"
   },
   "config": {
     "title": "IPv4 ve DNS ayarı",
