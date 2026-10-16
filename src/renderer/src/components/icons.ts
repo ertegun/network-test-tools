@@ -16,11 +16,13 @@ export { default as iconHistory } from '@iconify-icons/material-symbols/history'
 export { default as iconInfo } from '@iconify-icons/material-symbols/info-outline';
 export { default as iconLan } from '@iconify-icons/material-symbols/lan';
 export { default as iconLock } from '@iconify-icons/material-symbols/lock-outline';
+export { default as iconMail } from '@iconify-icons/material-symbols/mail-outline';
 export { default as iconNetworkCheck } from '@iconify-icons/material-symbols/network-check';
 export { default as iconPlay } from '@iconify-icons/material-symbols/play-arrow';
 export { default as iconPublic } from '@iconify-icons/material-symbols/public';
 export { default as iconRefresh } from '@iconify-icons/material-symbols/refresh';
 export { default as iconRouter } from '@iconify-icons/material-symbols/router';
+export { default as iconSend } from '@iconify-icons/material-symbols/send';
 export { default as iconSettings } from '@iconify-icons/material-symbols/settings';
 export { default as iconShield } from '@iconify-icons/material-symbols/shield-outline';
 export { default as iconStop } from '@iconify-icons/material-symbols/stop';

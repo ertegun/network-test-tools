@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { NetworkSnapshot, PendingChangeJournal, Settings } from '../../shared/types';
-import { iconDashboard, iconDescription, iconDns, iconNetworkCheck, iconRouter, iconSettings, iconWarning } from './components/icons';
+import { iconDashboard, iconDescription, iconDns, iconMail, iconNetworkCheck, iconRouter, iconSettings, iconWarning } from './components/icons';
 import { Alert, Button, Dialog, Icon } from './components/ui';
 import i18n, { resolveLanguage } from './i18n';
 import { errorMessage } from './lib/format';
@@ -11,6 +11,7 @@ import Hosts from './pages/Hosts';
 import NetConfig from './pages/NetConfig';
 import PortTest from './pages/PortTest';
 import SettingsPage from './pages/SettingsPage';
+import Smtp from './pages/Smtp';
 
 const PAGES = [
   { id: 'dashboard', icon: iconDashboard },
@@ -18,6 +19,7 @@ const PAGES = [
   { id: 'config', icon: iconRouter },
   { id: 'dns', icon: iconDns },
   { id: 'hosts', icon: iconDescription },
+  { id: 'smtp', icon: iconMail },
   { id: 'settings', icon: iconSettings },
 ] as const;
 type PageId = (typeof PAGES)[number]['id'];
@@ -113,6 +115,7 @@ export default function App() {
         {page === 'config' && <NetConfig snapshot={snapshot} />}
         {page === 'dns' && <Dns snapshot={snapshot} />}
         {page === 'hosts' && <Hosts />}
+        {page === 'smtp' && <Smtp />}
         {page === 'settings' && <SettingsPage settings={settings} onChange={(p) => void changeSettings(p)} />}
       </main>
       <Dialog
