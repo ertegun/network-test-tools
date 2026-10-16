@@ -114,8 +114,13 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # Not aralığı son yayınlanmış Release'ten başlar; build'i düşüp Release'i oluşmayan tag'ler (ör. v0.2.0) aradaki commitleri yutmasın.
       - name: Release notu
-        run: node scripts/release-notes.ts "$GITHUB_REF_NAME" > release-notes.md
+        run: |
+          PREV=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // empty')
+          node scripts/release-notes.ts "$GITHUB_REF_NAME" $PREV > release-notes.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release oluştur
         run: gh release create "$GITHUB_REF_NAME" dist/* --title "NetKit $GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
