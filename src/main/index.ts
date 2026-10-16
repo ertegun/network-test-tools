@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import { app, BrowserWindow, ipcMain, nativeTheme, session, type IpcMainInvokeEvent } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, session, shell, type IpcMainInvokeEvent } from 'electron';
 import { DNS_PRESETS, saveDnsEntry } from '../core/dnsServers';
 import { PUBLIC_IP_SERVICES } from '../core/publicIp';
 import { runHelper } from '../helper';
@@ -13,6 +13,7 @@ import { NetworkMonitor } from './network';
 import { createElevator, HELPER_FLAG, PrivilegedRunner } from './privileged';
 import { ScanManager } from './scan';
 import { JsonFile } from './store';
+import { DOCKER_DOWNLOAD_URL, torStarter } from './tor';
 
 // --- Yetkili yardımcı modu: pencere açılmaz, istek işlenip çıkılır. ---
 const helperIdx = process.argv.indexOf(HELPER_FLAG);
@@ -89,6 +90,9 @@ function startApp() {
   });
   handle('scan:start', async (req: ScanRequest) => scans.start(req, await monitor.snapshot()));
   handle('scan:stop', (id: string) => scans.stop(id));
+  const startTor = torStarter();
+  handle('tor:start', () => startTor());
+  handle('tor:openDockerDownload', () => shell.openExternal(DOCKER_DOWNLOAD_URL));
   handle('config:support', () => platform.configSupport());
   handle('config:read', (iface: string) => platform.readIpv4Config(iface));
   handle('config:validate', (iface: string, cfg: Ipv4Config) => config.validate(iface, cfg));

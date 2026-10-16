@@ -16,6 +16,7 @@ import type {
   ScanProgress,
   ScanRequest,
   Settings,
+  TorSetupStatus,
 } from './types';
 
 export type Unsubscribe = () => void;
@@ -53,6 +54,12 @@ export interface NetkitApi {
     profiles(): Promise<NetProfile[]>;
     saveProfile(p: NetProfile): Promise<NetProfile[]>;
     deleteProfile(name: string): Promise<NetProfile[]>;
+  };
+  tor: {
+    /** Docker'ı kontrol edip sabit adlı Tor container'ını başlatır (yoksa oluşturur). */
+    start(): Promise<TorSetupStatus>;
+    /** Docker Desktop indirme sayfasını varsayılan tarayıcıda açar (sabit adres). */
+    openDockerDownload(): Promise<void>;
   };
   dns: {
     /** Hazır kayıtlar ve kullanıcı kayıtları. */

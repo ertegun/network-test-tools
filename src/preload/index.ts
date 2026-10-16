@@ -42,6 +42,10 @@ const api: NetkitApi = {
     saveProfile: (p) => invoke('config:saveProfile', p),
     deleteProfile: (name) => invoke('config:deleteProfile', name),
   },
+  tor: {
+    start: () => invoke('tor:start'),
+    openDockerDownload: () => invoke('tor:openDockerDownload'),
+  },
   dns: {
     list: () => invoke('dns:list'),
     save: (e) => invoke('dns:save', e),

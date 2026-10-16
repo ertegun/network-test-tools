@@ -1,8 +1,8 @@
 // M2 — Port testi ve bağlam şeridi.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ContextStrip, NetworkSnapshot, PortPresetId, PortResult, PortState, ScanPath } from '../../../shared/types';
-import { iconCopy, iconDownload, iconInfo, iconPlay, iconStop, iconWarning } from '../components/icons';
+import { TOR_DOCKER_RUN_ARGS, type ContextStrip, type NetworkSnapshot, type PortPresetId, type PortResult, type PortState, type ScanPath, type TorSetupStatus } from '../../../shared/types';
+import { iconCheck, iconCopy, iconDownload, iconInfo, iconPlay, iconStop, iconWarning } from '../components/icons';
 import { Alert, Button, Card, Chip, Field, Icon, IconButton, InfoTip, Input, Progress, Select } from '../components/ui';
 import { downloadText, errorMessage, formatDateTime, formatDuration, toCsv } from '../lib/format';
 
@@ -10,6 +10,9 @@ const STATE_COLOR: Record<PortState, 'green' | 'red' | 'amber' | 'blue-gray'> = 
 type PortSource = 'custom' | PortPresetId;
 // Ghost uyarının renkli metni koyu temada kendi zemininde AA kontrastı sağlamıyor (amber ≈2.4:1).
 const ALERT_DARK = 'dark:!text-gray-100';
+const TOR_COMMAND = ['docker', ...TOR_DOCKER_RUN_ARGS].join(' ');
+type TorUiStatus = TorSetupStatus | { state: 'starting' };
+const TOR_ALERT_COLOR: Record<TorUiStatus['state'], 'blue' | 'green' | 'amber' | 'red'> = { starting: 'blue', running: 'green', notInstalled: 'amber', daemonOff: 'amber', error: 'red' };
 
 export function ContextBar({ ctx }: { ctx: ContextStrip }) {
   const { t } = useTranslation();
@@ -49,6 +52,7 @@ export default function PortTest({ snapshot }: { snapshot?: NetworkSnapshot }) {
   const [concurrency, setConcurrency] = useState('200');
   const [path, setPath] = useState<ScanPath>('direct');
   const [sourceIp, setSourceIp] = useState(''); // boş: işletim sistemi seçer
+  const [tor, setTor] = useState<TorUiStatus>();
   const [scanId, setScanId] = useState<string>();
   const [ctx, setCtx] = useState<ContextStrip>();
   const [results, setResults] = useState<PortResult[]>([]);
@@ -105,6 +109,15 @@ export default function PortTest({ snapshot }: { snapshot?: NetworkSnapshot }) {
     } catch (err) {
       const code = errorMessage(err);
       setError(t(`portTest.errors.${code}`, { defaultValue: code }));
+    }
+  };
+
+  const setupTor = async () => {
+    setTor({ state: 'starting' });
+    try {
+      setTor(await window.netkit.tor.start());
+    } catch (err) {
+      setTor({ state: 'error', message: errorMessage(err) });
     }
   };
 
@@ -190,7 +203,31 @@ export default function PortTest({ snapshot }: { snapshot?: NetworkSnapshot }) {
             />
           </div>
         </div>
-        {path === 'tor' && <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">{t('portTest.torHint')}</p>}
+        {path === 'tor' && (
+          <div className="mt-2 flex flex-col gap-2">
+            <p className="text-xs text-gray-600 dark:text-gray-400">{t('portTest.torHint')}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outlined" size="sm" onClick={setupTor} disabled={tor?.state === 'starting'}>
+                <Icon icon={iconPlay} className="h-4 w-4" /> {t('portTest.torSetup.setup')}
+              </Button>
+              <span className="text-xs text-gray-600 dark:text-gray-400">{t('portTest.torSetup.command')}:</span>
+              <code className="min-w-0 flex-[1_1_16rem] break-all rounded bg-gray-100 px-2 py-1 text-xs dark:bg-gray-900 dark:text-gray-100">{TOR_COMMAND}</code>
+              <IconButton icon={iconCopy} label={t('common.copy')} onClick={() => void navigator.clipboard.writeText(TOR_COMMAND)} />
+            </div>
+            {tor && (
+              <Alert color={TOR_ALERT_COLOR[tor.state]} icon={tor.state === 'running' ? iconCheck : iconWarning} className={ALERT_DARK}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>{tor.state === 'error' ? t('portTest.torSetup.error', { message: tor.message }) : t(`portTest.torSetup.${tor.state}`)}</span>
+                  {tor.state === 'notInstalled' && (
+                    <Button variant="text" size="sm" className={ALERT_DARK} onClick={() => void window.netkit.tor.openDockerDownload()}>
+                      <Icon icon={iconDownload} className="h-4 w-4" /> {t('portTest.torSetup.download')}
+                    </Button>
+                  )}
+                </div>
+              </Alert>
+            )}
+          </div>
+        )}
         <div className="mt-3 flex items-center gap-2">
           {scanId ? (
             <Button color="red" onClick={stop}>

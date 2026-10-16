@@ -91,6 +91,16 @@
       "torUnavailable": "Tor erişilemiyor (127.0.0.1:9050). Tor'un çalıştığından emin olun.",
       "invalidSourceIp": "Kaynak IP bu bilgisayarın ağ arayüzlerinde yok.",
       "invalidPath": "Geçersiz tarama yolu."
+    },
+    "torSetup": {
+      "setup": "Tor'u Docker ile kur/başlat",
+      "command": "Elle çalıştırmak için komut",
+      "starting": "Tor container'ı başlatılıyor… İlk kurulumda imaj indirildiği için birkaç dakika sürebilir.",
+      "running": "Tor container'ı (netkit-tor) çalışıyor.",
+      "notInstalled": "Docker bulunamadı. Tor'u tek tıkla kurmak için Docker Desktop'ı yükleyin.",
+      "daemonOff": "Docker çalışmıyor. Docker Desktop'ı başlatıp tekrar deneyin.",
+      "error": "Tor başlatılamadı: {{message}}",
+      "download": "Docker Desktop'ı indir"
     }
   },
   "presets": {

@@ -49,6 +49,12 @@ export type PortState = 'open' | 'closed' | 'filtered' | 'proxyError';
 /** direct: işletim sisteminin yönlendirmesi (isteğe bağlı kaynak IP); tor: yerel Tor SOCKS5 proxy'si. */
 export type ScanPath = 'direct' | 'tor';
 
+/** Tor'un Docker ile kurulumu: sabit container adı ve `docker` argümanları (arayüzde kopyalanabilir komut olarak da gösterilir). */
+export const TOR_CONTAINER = 'netkit-tor';
+export const TOR_DOCKER_RUN_ARGS = ['run', '-d', '--name', TOR_CONTAINER, '--restart', 'unless-stopped', '-p', '127.0.0.1:9050:9050', 'osminogin/tor-simple'] as const;
+
+export type TorSetupStatus = { state: 'running' } | { state: 'notInstalled' } | { state: 'daemonOff' } | { state: 'error'; message: string };
+
 export interface PortResult {
   port: number;
   state: PortState;

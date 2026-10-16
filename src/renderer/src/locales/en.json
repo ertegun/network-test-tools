@@ -91,6 +91,16 @@
       "torUnavailable": "Tor is unreachable (127.0.0.1:9050). Make sure Tor is running.",
       "invalidSourceIp": "The source IP is not on any of this computer's network interfaces.",
       "invalidPath": "Invalid scan path."
+    },
+    "torSetup": {
+      "setup": "Install/start Tor with Docker",
+      "command": "Command to run it yourself",
+      "starting": "Starting the Tor container… The first run downloads the image and may take a few minutes.",
+      "running": "The Tor container (netkit-tor) is running.",
+      "notInstalled": "Docker was not found. Install Docker Desktop to set up Tor in one click.",
+      "daemonOff": "Docker is not running. Start Docker Desktop and try again.",
+      "error": "Could not start Tor: {{message}}",
+      "download": "Download Docker Desktop"
     }
   },
   "presets": {
