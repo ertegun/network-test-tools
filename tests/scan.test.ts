@@ -41,15 +41,18 @@ describe('scanRoute (yol ve kaynak IP)', () => {
   });
 
   it('bağlantı seçilen kaynak IP adresinden çıkar', async () => {
-    let seen: string | undefined;
+    // İstemci bağlantısı, sunucunun connection olayından önce çözülebilir (macOS); adresi ayrıca bekle.
+    let seen!: (addr: string | undefined) => void;
+    const remote = new Promise<string | undefined>((res) => (seen = res));
     const server = createServer((s) => {
-      seen = s.remoteAddress;
+      seen(s.remoteAddress);
       s.destroy();
     });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
     const r = await probePort('127.0.0.1', (server.address() as { port: number }).port, 1000, undefined, '127.0.0.1');
+    const addr = await remote;
     await new Promise((res) => server.close(res));
     expect(r.state).toBe('open');
-    expect(seen).toBe('127.0.0.1');
+    expect(addr).toBe('127.0.0.1');
   });
 });

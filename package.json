@@ -1,6 +1,6 @@
 {
   "name": "netkit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "NetKit — çapraz platform masaüstü ağ test ve yönetim aracı",
   "main": "./out/main/index.js",
