@@ -11,6 +11,7 @@ export function fakePlatform(hostsPath = '/nonexistent/hosts'): Platform {
     readIpv4Config: vi.fn(async () => ({ mode: 'dhcp' as const, dns: [] })),
     ping: vi.fn(async () => false),
     applyIpv4: vi.fn(async () => undefined),
+    applyDns: vi.fn(async () => undefined),
     flushDns: vi.fn(async () => undefined),
   };
 }

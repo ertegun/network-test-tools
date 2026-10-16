@@ -146,7 +146,6 @@ export default function PortTest() {
           </div>
           <div className="min-w-0 flex-[1_1_13rem]">
             <Select<PortSource>
-              outlined
               label={t('portTest.portSource')}
               value={source}
               onChange={setSource}

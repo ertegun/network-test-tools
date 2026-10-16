@@ -166,3 +166,12 @@ export interface Settings {
   publicIpService: string;
   warningAccepted: boolean;
 }
+
+/** DNS değiştirici listesindeki kayıt; hazır (builtin) kayıtlar düzenlenemez ve silinemez. */
+export interface DnsEntry {
+  id: string;
+  name: string;
+  primary: string;
+  secondary?: string;
+  builtin?: boolean;
+}

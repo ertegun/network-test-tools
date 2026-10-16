@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { darwinIpv4Commands, parseDefaultRoutes, parseDnsServers, parseGetInfo, parseHardwarePorts, parseScutilDns } from '../src/platform/darwin';
+import { darwinDnsCommands, darwinIpv4Commands, parseDefaultRoutes, parseDnsServers, parseGetInfo, parseHardwarePorts, parseScutilDns } from '../src/platform/darwin';
 import type { Runner } from '../src/platform/exec';
-import { createLinux, linuxIpv4Commands, parseConnectionShow, parseDeviceShow, parseNmcliDevices, splitTerse } from '../src/platform/linux';
-import { createWin32, parseWinDetails, win32Ipv4Commands } from '../src/platform/win32';
+import { createLinux, linuxDnsCommands, linuxIpv4Commands, parseConnectionShow, parseDeviceShow, parseNmcliDevices, splitTerse } from '../src/platform/linux';
+import { createWin32, parseWinDetails, win32DnsCommands, win32Ipv4Commands } from '../src/platform/win32';
 
 const WIN_JSON = readFileSync(join(__dirname, 'fixtures', 'win-details.json'), 'utf8');
 
@@ -113,5 +113,22 @@ describe('Linux (NetworkManager)', () => {
   it('NetworkManager yoksa yapılandırma devre dışı ve nedeni bildirilir', async () => {
     const p = createLinux(async () => ({ stdout: '', stderr: 'nmcli: not found', code: 127 }));
     expect(await p.configSupport()).toEqual({ supported: false, reason: 'networkManagerMissing' });
+  });
+});
+
+describe('yalnızca DNS komutları (DNS değiştirici)', () => {
+  it("adres ayarına dokunmaz; boş liste DNS'i DHCP'ye döndürür", () => {
+    expect(win32DnsCommands('Wi-Fi', ['1.1.1.1', '1.0.0.1'])).toEqual([
+      ['netsh', 'interface', 'ipv4', 'set', 'dnsservers', 'Wi-Fi', 'static', '1.1.1.1', 'primary', 'validate=no'],
+      ['netsh', 'interface', 'ipv4', 'add', 'dnsservers', 'Wi-Fi', '1.0.0.1', 'index=2', 'validate=no'],
+    ]);
+    expect(win32DnsCommands('Wi-Fi', [])).toEqual([['netsh', 'interface', 'ipv4', 'set', 'dnsservers', 'Wi-Fi', 'dhcp']]);
+    expect(darwinDnsCommands('Wi-Fi', ['9.9.9.9'])).toEqual([['networksetup', '-setdnsservers', 'Wi-Fi', '9.9.9.9']]);
+    expect(darwinDnsCommands('Wi-Fi', [])).toEqual([['networksetup', '-setdnsservers', 'Wi-Fi', 'Empty']]);
+    expect(linuxDnsCommands('Wired', ['1.1.1.1', '1.0.0.1'])).toEqual([
+      ['nmcli', 'connection', 'modify', 'Wired', 'ipv4.dns', '1.1.1.1,1.0.0.1', 'ipv4.ignore-auto-dns', 'yes'],
+      ['nmcli', 'connection', 'up', 'Wired'],
+    ]);
+    expect(linuxDnsCommands('Wired', [])[0]).toEqual(['nmcli', 'connection', 'modify', 'Wired', 'ipv4.dns', '', 'ipv4.ignore-auto-dns', 'no']);
   });
 });

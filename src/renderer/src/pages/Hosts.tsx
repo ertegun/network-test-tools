@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { HostsGroup, HostsView, PrivilegedResult } from '../../../shared/types';
 import { iconAdd, iconDelete, iconHistory, iconLock, iconWarning } from '../components/icons';
-import { Alert, Button, Card, Dialog, IconButton, Input, Switch } from '../components/ui';
+import { Alert, Button, Card, Dialog, IconButton, Input, Switch, Textarea } from '../components/ui';
 import { errorMessage, formatDateTime } from '../lib/format';
 
 interface EditableGroup {
@@ -148,12 +148,13 @@ export default function Hosts() {
                   }}
                 />
               </div>
-              <textarea
-                className="h-28 w-full rounded-md border border-gray-300 bg-transparent p-2 font-mono text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600"
+              <Textarea
+                label={t('hosts.entries')}
+                className="!h-28 font-mono"
                 placeholder="127.0.0.1  proje.local"
                 value={g.text}
                 spellCheck={false}
-                onChange={(e) => update(g.id, { text: e.target.value })}
+                onChange={(text) => update(g.id, { text })}
               />
             </div>
           ))}

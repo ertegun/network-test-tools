@@ -49,6 +49,25 @@ export class ConfigService {
       return status;
     }
     const normalized: Ipv4Config = cfg.mode === 'static' ? { ...cfg, mask: normalizeMask(cfg.mask ?? '') ?? cfg.mask } : cfg;
+    return this.startChange(iface, 'ipv4.change', { interface: iface, config: normalized }, normalized);
+  }
+
+  /** Yalnızca DNS sunucularını değiştirir (boş liste: DHCP); onay ve 15 sn geri alma IP değişikliğiyle aynı. */
+  async applyDns(iface: string, dns: string[]): Promise<ChangeStatus> {
+    const phase = this.status?.phase;
+    if (phase === 'applying' || phase === 'awaitingConfirm' || phase === 'rollingBack') throw new Error('changeInProgress');
+    const errors: string[] = [];
+    if (!isValidInterfaceName(iface)) errors.push('invalidInterface');
+    if (!Array.isArray(dns) || dns.length > 4 || dns.some((d) => !isValidIPv4(d))) errors.push('invalidDns');
+    if (errors.length > 0) {
+      const status: ChangeStatus = { phase: 'failed', interfaceName: iface, error: errors.join(', ') };
+      this.onStatus(status);
+      return status;
+    }
+    return this.startChange(iface, 'dns.change', { interface: iface, dns }, { dns });
+  }
+
+  private startChange(iface: string, op: string, params: unknown, next: unknown): Promise<ChangeStatus> {
     // Yedek, uygulama ve 15 sn geri alma yetkili yardımcının içinde yürür (tek yetki penceresi).
     let settle!: (s: ChangeStatus) => void;
     let ready!: (s: ChangeStatus) => void;
@@ -64,9 +83,9 @@ export class ConfigService {
     };
     emit({ phase: 'applying', interfaceName: iface });
     const session = this.privileged.start(
-      'ipv4.change',
-      { interface: iface, config: normalized },
-      { next: normalized },
+      op,
+      params,
+      { next },
       {
         onStatus: emit,
         onJournal: async (j) => {
@@ -105,7 +124,12 @@ export class ConfigService {
   async recover(): Promise<PrivilegedResult> {
     const j = await this.journal.read();
     if (!j) return { ok: true };
-    const r = await this.privileged.run('ipv4.apply', { interface: j.interfaceName, config: j.previous }, { previous: j.next, next: j.previous });
+    // Yalnızca DNS değiştiyse yalnızca DNS geri yüklenir; adres ayarı yeniden yazılmaz.
+    const addr = (c: Ipv4Config) => JSON.stringify({ ...c, dns: [] });
+    const dnsOnly = addr(j.previous) === addr(j.next);
+    const r = dnsOnly
+      ? await this.privileged.run('dns.apply', { interface: j.interfaceName, dns: j.previous.dns }, { previous: j.next, next: j.previous })
+      : await this.privileged.run('ipv4.apply', { interface: j.interfaceName, config: j.previous }, { previous: j.next, next: j.previous });
     if (r.ok) await this.journal.remove();
     return r;
   }
