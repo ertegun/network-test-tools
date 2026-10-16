@@ -72,6 +72,8 @@
     "port": "Port",
     "state": "State",
     "service": "Service",
+    "allWarning": "Scanning all ports (65,535 ports) may take up to about {{duration}} in the worst case; the time depends on the timeout and concurrency. You can stop the scan at any time. Only open ports are listed in the results.",
+    "openFound": "{{count}} open",
     "errors": {
       "invalidTarget": "Enter a valid IP address or domain name.",
       "invalidPorts": "Invalid port list. Example: 22,80,443,8000-8100 (1–65535).",
@@ -84,7 +86,8 @@
     "web": "Web",
     "mail": "Email",
     "remote": "Remote desktop",
-    "database": "Database"
+    "database": "Database",
+    "all": "All ports (1-65535)"
   },
   "state": {
     "open": "Open",

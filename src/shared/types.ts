@@ -66,7 +66,7 @@ export interface ContextStrip {
   splitTunnel: boolean;
 }
 
-export type PortPresetId = 'top100' | 'web' | 'mail' | 'remote' | 'database';
+export type PortPresetId = 'top100' | 'web' | 'mail' | 'remote' | 'database' | 'all';
 
 export interface ScanRequest {
   target: string;

@@ -72,6 +72,8 @@
     "port": "Port",
     "state": "Durum",
     "service": "Servis",
+    "allWarning": "Tüm portlar (65.535 port) taraması en kötü durumda yaklaşık {{duration}} sürebilir; süre zaman aşımı ve eşzamanlı bağlantı sayısına bağlıdır. Tarama istendiğinde durdurulabilir. Sonuçlarda yalnızca açık portlar listelenir.",
+    "openFound": "{{count}} açık",
     "errors": {
       "invalidTarget": "Geçerli bir IP adresi veya alan adı girin.",
       "invalidPorts": "Port listesi geçersiz. Örnek: 22,80,443,8000-8100 (1–65535).",
@@ -84,7 +86,8 @@
     "web": "Web",
     "mail": "E-posta",
     "remote": "Uzak masaüstü",
-    "database": "Veritabanı"
+    "database": "Veritabanı",
+    "all": "Tüm portlar (1-65535)"
   },
   "state": {
     "open": "Açık",

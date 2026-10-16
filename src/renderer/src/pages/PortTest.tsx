@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { ContextStrip, PortPresetId, PortResult, PortState } from '../../../shared/types';
 import { iconCopy, iconDownload, iconInfo, iconPlay, iconStop, iconWarning } from '../components/icons';
 import { Alert, Button, Card, Chip, Field, Icon, IconButton, InfoTip, Input, Progress, Select } from '../components/ui';
-import { downloadText, errorMessage, formatDateTime, toCsv } from '../lib/format';
+import { downloadText, errorMessage, formatDateTime, formatDuration, toCsv } from '../lib/format';
 
 const STATE_COLOR: Record<PortState, 'green' | 'red' | 'amber'> = { open: 'green', closed: 'red', filtered: 'amber' };
 type PortSource = 'custom' | PortPresetId;
@@ -52,17 +52,21 @@ export default function PortTest() {
   const [error, setError] = useState<string>();
   const [filter, setFilter] = useState<PortState | 'all'>('all');
   const scanRef = useRef<string>();
+  // Tüm portlar taramasında yalnız açık portlar tutulur (65535 satır listelenmez).
+  const [openOnly, setOpenOnly] = useState(false);
+  const openOnlyRef = useRef(false);
 
   useEffect(() => {
     const offProgress = window.netkit.scan.onProgress((batch) => {
       const mine = batch.filter((b) => b.scanId === scanRef.current);
       if (mine.length === 0) return;
-      setResults((prev) => [...prev, ...mine.map((b) => b.result)]);
+      const kept = mine.map((b) => b.result).filter((r) => !openOnlyRef.current || r.state === 'open');
+      if (kept.length > 0) setResults((prev) => [...prev, ...kept]);
       setProgress({ done: mine[mine.length - 1].done, total: mine[mine.length - 1].total });
     });
     const offFinished = window.netkit.scan.onFinished((f) => {
       if (f.scanId !== scanRef.current) return;
-      setResults(f.results);
+      setResults(openOnlyRef.current ? f.results.filter((r) => r.state === 'open') : f.results);
       setDuration(f.durationMs);
       setScanId(undefined);
     });
@@ -76,6 +80,9 @@ export default function PortTest() {
     setError(undefined);
     setResults([]);
     setDuration(undefined);
+    openOnlyRef.current = source === 'all';
+    setOpenOnly(openOnlyRef.current);
+    if (openOnlyRef.current) setFilter('all');
     try {
       const r = await window.netkit.scan.start({
         target: target.trim(),
@@ -105,6 +112,8 @@ export default function PortTest() {
     return c;
   }, [results]);
   const shown = filter === 'all' ? sorted : sorted.filter((r) => r.state === filter);
+  // En kötü durum: her port zaman aşımına düşer (varsayılanlar ve üst sınır portScan.ts ile aynı).
+  const allEstimateSec = Math.ceil(65535 / Math.min(Number(concurrency) || 200, 1000)) * ((Number(timeoutMs) || 2000) / 1000);
 
   const rows = (): (string | number)[][] => [
     [t('portTest.port'), t('portTest.state'), 'ms', t('portTest.service')],
@@ -141,7 +150,7 @@ export default function PortTest() {
               label={t('portTest.portSource')}
               value={source}
               onChange={setSource}
-              options={(['custom', 'top100', 'web', 'mail', 'remote', 'database'] as PortSource[]).map((v) => ({ value: v, label: t(`presets.${v}`) }))}
+              options={(['custom', 'top100', 'all', 'web', 'mail', 'remote', 'database'] as PortSource[]).map((v) => ({ value: v, label: t(`presets.${v}`) }))}
             />
           </div>
           <div className="min-w-0 flex-[1_1_9rem]">
@@ -171,11 +180,17 @@ export default function PortTest() {
               </div>
               <span className="text-xs tabular-nums text-gray-600 dark:text-gray-400">
                 {progress.done}/{progress.total}
+                {openOnly && ` · ${t('portTest.openFound', { count: counts.open })}`}
                 {duration !== undefined && ` · ${(duration / 1000).toFixed(1)} s`}
               </span>
             </div>
           )}
         </div>
+        {source === 'all' && !scanId && (
+          <Alert color="amber" icon={iconWarning} className="mt-3">
+            {t('portTest.allWarning', { duration: formatDuration(allEstimateSec) })}
+          </Alert>
+        )}
         {error && <Alert color="red" className="mt-3">{error}</Alert>}
         <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
           <b>{t('state.open')}</b>: {t('state.openHelp')} · <b>{t('state.closed')}</b>: {t('state.closedHelp')} · <b>{t('state.filtered')}</b>: {t('state.filteredHelp')}
@@ -192,17 +207,19 @@ export default function PortTest() {
             </>
           }
         >
-          <div className="mb-2 flex flex-wrap gap-2">
-            {(['all', 'open', 'closed', 'filtered'] as const).map((f) => (
-              <button key={f} type="button" onClick={() => setFilter(f)} className={filter === f ? 'opacity-100' : 'opacity-60'}>
-                <Chip
-                  value={`${f === 'all' ? t('portTest.all') : t(`state.${f}`)} (${f === 'all' ? results.length : counts[f]})`}
-                  color={f === 'all' ? 'blue-gray' : STATE_COLOR[f]}
-                  variant={filter === f ? 'filled' : 'ghost'}
-                />
-              </button>
-            ))}
-          </div>
+          {!openOnly && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {(['all', 'open', 'closed', 'filtered'] as const).map((f) => (
+                <button key={f} type="button" onClick={() => setFilter(f)} className={filter === f ? 'opacity-100' : 'opacity-60'}>
+                  <Chip
+                    value={`${f === 'all' ? t('portTest.all') : t(`state.${f}`)} (${f === 'all' ? results.length : counts[f]})`}
+                    color={f === 'all' ? 'blue-gray' : STATE_COLOR[f]}
+                    variant={filter === f ? 'filled' : 'ghost'}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="max-h-[45vh] overflow-auto">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 bg-white text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">

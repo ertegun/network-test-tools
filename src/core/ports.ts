@@ -39,6 +39,7 @@ export const PORT_PRESETS = {
   mail: [25, 110, 143, 465, 587, 993, 995],
   remote: [22, 23, 3389, 5900, 5938, 5800],
   database: [1433, 1521, 3306, 5432, 6379, 9200, 11211, 27017, 5984],
+  all: Array.from({ length: 65535 }, (_, i) => i + 1),
 } as const satisfies Record<string, readonly number[]>;
 
 export type PortPreset = keyof typeof PORT_PRESETS;
