@@ -191,3 +191,68 @@ describe('yardımcı içinde onaylı değişiklik (M7, ipv4.change)', () => {
     expect(platform.applyIpv4).not.toHaveBeenCalled();
   });
 });
+
+describe('yardımcı içinde onaylı DNS değişikliği (dns.change)', () => {
+  const PREVIOUS: Ipv4Config = { mode: 'dhcp', dns: ['192.168.1.1'] };
+  const CLOUDFLARE = ['1.1.1.1', '1.0.0.1'];
+
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function setup(readBack?: (written: string[]) => string[]) {
+    const platform = fakePlatform();
+    let dns = PREVIOUS.dns;
+    vi.mocked(platform.applyDns).mockImplementation(async (_i, d) => {
+      dns = readBack ? readBack(d) : d;
+    });
+    vi.mocked(platform.readIpv4Config).mockImplementation(async () => ({ ...PREVIOUS, dns }));
+    let command: ((c: ChangeCommand) => void) | undefined;
+    const ctx: SessionContext = { status: () => undefined, saveJournal: vi.fn(async () => undefined), onCommand: (cb) => (command = cb) };
+    const done = handleRequest({ op: 'dns.change', params: { interface: 'Ethernet', dns: CLOUDFLARE } }, platform, ctx);
+    return { platform, ctx, done, send: (c: ChangeCommand) => command?.(c) };
+  }
+
+  it('kabul kriteri: Cloudflare onaylanınca yalnızca DNS 1.1.1.1/1.0.0.1 yazılır, adres ayarına dokunulmaz', async () => {
+    const { platform, ctx, done, send } = setup();
+    await vi.advanceTimersByTimeAsync(1000);
+    send('confirm');
+    expect(await done).toMatchObject({ ok: true, output: { phase: 'confirmed' } });
+    expect(vi.mocked(platform.applyDns).mock.calls).toEqual([['Ethernet', CLOUDFLARE]]);
+    expect(platform.applyIpv4).not.toHaveBeenCalled();
+    expect(ctx.saveJournal).toHaveBeenCalledWith(expect.objectContaining({ previous: PREVIOUS, next: { ...PREVIOUS, dns: CLOUDFLARE } }));
+  });
+
+  it('onay gelmezse önceki DNS geri yüklenir', async () => {
+    const { platform, done } = setup();
+    await vi.advanceTimersByTimeAsync(CONFIRM_TIMEOUT_MS);
+    expect(await done).toMatchObject({ ok: true, output: { phase: 'rolledBack' } });
+    expect(vi.mocked(platform.applyDns).mock.calls).toEqual([
+      ['Ethernet', CLOUDFLARE],
+      ['Ethernet', PREVIOUS.dns],
+    ]);
+  });
+
+  it('geri okunan DNS yazılanla uyuşmazsa onay beklenmeden önceki DNS geri yüklenir', async () => {
+    // İşletim sistemi yalnızca ilk sunucuyu kaydetmiş gibi davranır; geri almada yazılan aynen okunur.
+    const { platform, done } = setup((d) => (d.length > 1 ? d.slice(0, 1) : d));
+    await vi.advanceTimersByTimeAsync(0);
+    const r = await done;
+    expect(r).toMatchObject({ ok: true, output: { phase: 'rolledBack', error: expect.stringContaining('dnsMismatch') } });
+    expect(vi.mocked(platform.applyDns).mock.calls.at(-1)).toEqual(['Ethernet', PREVIOUS.dns]);
+  });
+
+  it('kabul kriteri: geçersiz DNS ("1.2.3") ile hiçbir şey okunmaz ve yazılmaz', async () => {
+    const platform = fakePlatform();
+    const r = await handleRequest({ op: 'dns.change', params: { interface: 'Ethernet', dns: ['1.2.3'] } }, platform);
+    expect(r).toMatchObject({ ok: false, code: 'invalidParams' });
+    expect(platform.readIpv4Config).not.toHaveBeenCalled();
+    expect(platform.applyDns).not.toHaveBeenCalled();
+  });
+
+  it('dns.apply (kurtarma) yalnızca DNS yazar', async () => {
+    const platform = fakePlatform();
+    expect(await handleRequest({ op: 'dns.apply', params: { interface: 'Ethernet', dns: [] } }, platform)).toMatchObject({ ok: true });
+    expect(vi.mocked(platform.applyDns).mock.calls).toEqual([['Ethernet', []]]);
+    expect(platform.applyIpv4).not.toHaveBeenCalled();
+  });
+});

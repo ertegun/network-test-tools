@@ -1,9 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { app, BrowserWindow, ipcMain, nativeTheme, session, type IpcMainInvokeEvent } from 'electron';
+import { DNS_PRESETS, saveDnsEntry } from '../core/dnsServers';
 import { PUBLIC_IP_SERVICES } from '../core/publicIp';
 import { runHelper } from '../helper';
 import { getPlatform } from '../platform';
-import type { ChangeStatus, HostsGroup, Ipv4Config, NetProfile, PendingChangeJournal, ScanRequest, Settings } from '../shared/types';
+import type { ChangeStatus, DnsEntry, HostsGroup, Ipv4Config, NetProfile, PendingChangeJournal, ScanRequest, Settings } from '../shared/types';
 import { AuditLog } from './audit';
 import { ConfigService } from './config';
 import { HostsService } from './hosts';
@@ -68,6 +70,8 @@ function startApp() {
     new JsonFile<NetProfile[]>(data('profiles.json'), () => []),
     (s: ChangeStatus) => send('config:status', s),
   );
+  const dnsFile = new JsonFile<DnsEntry[]>(data('dns-servers.json'), () => []);
+  const dnsList = async () => [...DNS_PRESETS, ...(await dnsFile.read())];
   const hosts = new HostsService(platform, privileged, new JsonFile<HostsGroup[]>(data('hosts-groups.json'), () => []), data('hosts-backups'));
   monitor.on('change', (s) => send('network:change', s));
 
@@ -97,6 +101,16 @@ function startApp() {
   handle('config:profiles', () => config.profiles());
   handle('config:saveProfile', (p: NetProfile) => config.saveProfile(p));
   handle('config:deleteProfile', (name: string) => config.deleteProfile(name));
+  handle('dns:list', () => dnsList());
+  handle('dns:save', async (entry: unknown) => {
+    await dnsFile.write(saveDnsEntry(await dnsFile.read(), entry, randomUUID));
+    return dnsList();
+  });
+  handle('dns:delete', async (id: string) => {
+    await dnsFile.write((await dnsFile.read()).filter((e) => e.id !== id));
+    return dnsList();
+  });
+  handle('dns:apply', (iface: string, dns: string[]) => config.applyDns(iface, dns));
   handle('hosts:view', () => hosts.view());
   handle('hosts:saveGroups', (g: HostsGroup[]) => hosts.saveGroups(g));
   handle('hosts:apply', () => hosts.apply());

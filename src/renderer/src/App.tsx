@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { NetworkSnapshot, PendingChangeJournal, Settings } from '../../shared/types';
-import { iconDashboard, iconDescription, iconNetworkCheck, iconRouter, iconSettings, iconWarning } from './components/icons';
+import { iconDashboard, iconDescription, iconDns, iconNetworkCheck, iconRouter, iconSettings, iconWarning } from './components/icons';
 import { Alert, Button, Dialog, Icon } from './components/ui';
 import i18n, { resolveLanguage } from './i18n';
 import { errorMessage } from './lib/format';
 import Dashboard from './pages/Dashboard';
+import Dns from './pages/Dns';
 import Hosts from './pages/Hosts';
 import NetConfig from './pages/NetConfig';
 import PortTest from './pages/PortTest';
@@ -15,6 +16,7 @@ const PAGES = [
   { id: 'dashboard', icon: iconDashboard },
   { id: 'portTest', icon: iconNetworkCheck },
   { id: 'config', icon: iconRouter },
+  { id: 'dns', icon: iconDns },
   { id: 'hosts', icon: iconDescription },
   { id: 'settings', icon: iconSettings },
 ] as const;
@@ -109,6 +111,7 @@ export default function App() {
         {page === 'dashboard' && <Dashboard snapshot={snapshot} onSnapshot={setSnapshot} />}
         {page === 'portTest' && <PortTest />}
         {page === 'config' && <NetConfig snapshot={snapshot} />}
+        {page === 'dns' && <Dns snapshot={snapshot} />}
         {page === 'hosts' && <Hosts />}
         {page === 'settings' && <SettingsPage settings={settings} onChange={(p) => void changeSettings(p)} />}
       </main>

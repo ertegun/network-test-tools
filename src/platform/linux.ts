@@ -81,8 +81,15 @@ export function linuxIpv4Commands(connection: string, cfg: Ipv4Config): string[]
     if (!cfg.ip || !mask) throw new Error('Statik ayar için IP ve maske gerekli');
     modify.push('ipv4.method', 'manual', 'ipv4.addresses', `${cfg.ip}/${maskToPrefix(mask)}`, 'ipv4.gateway', cfg.gateway ?? '');
   }
-  modify.push('ipv4.dns', cfg.dns.join(','), 'ipv4.ignore-auto-dns', cfg.dns.length > 0 ? 'yes' : 'no');
+  modify.push(...linuxDnsArgs(cfg.dns));
   return [modify, ['nmcli', 'connection', 'up', connection]];
+}
+
+const linuxDnsArgs = (dns: string[]) => ['ipv4.dns', dns.join(','), 'ipv4.ignore-auto-dns', dns.length > 0 ? 'yes' : 'no'];
+
+/** Yalnızca DNS sunucuları; boş liste DNS'i DHCP'den almaya döner. */
+export function linuxDnsCommands(connection: string, dns: string[]): string[][] {
+  return [['nmcli', 'connection', 'modify', connection, ...linuxDnsArgs(dns)], ['nmcli', 'connection', 'up', connection]];
 }
 
 export function createLinux(runner: Runner = run): Platform {
@@ -126,6 +133,7 @@ export function createLinux(runner: Runner = run): Platform {
     ping: async (ip, timeoutMs) =>
       (await runner('ping', ['-c', '1', '-W', String(Math.max(1, Math.ceil(timeoutMs / 1000))), ip], { timeoutMs: timeoutMs + 3000 })).code === 0,
     applyIpv4: async (iface, cfg) => runAll(runner, linuxIpv4Commands(await connectionFor(iface), cfg), { timeoutMs: 30_000 }),
+    applyDns: async (iface, dns) => runAll(runner, linuxDnsCommands(await connectionFor(iface), dns), { timeoutMs: 30_000 }),
     flushDns: async () => {
       // systemd-resolved yoksa önbellek de yoktur; hata yok sayılır.
       const r = await runner('resolvectl', ['flush-caches']);

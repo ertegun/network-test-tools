@@ -71,8 +71,12 @@ export function darwinIpv4Commands(service: string, cfg: Ipv4Config): string[][]
     if (cfg.gateway) cmd.push(cfg.gateway);
     cmds.push(cmd);
   }
-  cmds.push(['networksetup', '-setdnsservers', service, ...(cfg.dns.length > 0 ? cfg.dns : ['Empty'])]);
-  return cmds;
+  return [...cmds, ...darwinDnsCommands(service, cfg.dns)];
+}
+
+/** Yalnızca DNS sunucuları; boş liste ("Empty") DNS'i DHCP'ye döndürür. */
+export function darwinDnsCommands(service: string, dns: string[]): string[][] {
+  return [['networksetup', '-setdnsservers', service, ...(dns.length > 0 ? dns : ['Empty'])]];
 }
 
 export function createDarwin(runner: Runner = run): Platform {
@@ -127,6 +131,7 @@ export function createDarwin(runner: Runner = run): Platform {
     },
     ping: async (ip, timeoutMs) => (await runner('ping', ['-c', '1', '-W', String(timeoutMs), ip], { timeoutMs: timeoutMs + 3000 })).code === 0,
     applyIpv4: async (iface, cfg) => runAll(runner, darwinIpv4Commands(await serviceFor(iface), cfg), { timeoutMs: 30_000 }),
+    applyDns: async (iface, dns) => runAll(runner, darwinDnsCommands(await serviceFor(iface), dns), { timeoutMs: 30_000 }),
     flushDns: () => runAll(runner, [['dscacheutil', '-flushcache'], ['killall', '-HUP', 'mDNSResponder']]),
   };
 }

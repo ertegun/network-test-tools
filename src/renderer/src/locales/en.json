@@ -3,6 +3,7 @@
     "dashboard": "Network overview",
     "portTest": "Port test",
     "config": "Network configuration",
+    "dns": "DNS changer",
     "hosts": "Hosts manager",
     "settings": "Settings"
   },
@@ -147,6 +148,41 @@
     "unsupported": {
       "networkManagerMissing": "Network configuration is only supported on Linux distributions that use NetworkManager. NetworkManager is not running on this system.",
       "generic": "Network configuration is not supported on this system."
+    }
+  },
+  "dns": {
+    "title": "DNS server",
+    "privilegeNote": "Changing DNS needs administrator rights. When you press \"Apply\", the system permission prompt opens and the selected DNS servers are written to the interface; the IP address does not change. If you do not confirm within 15 seconds, the previous DNS is restored.",
+    "current": "Current DNS",
+    "automatic": "automatic (DHCP)",
+    "builtin": "Built-in",
+    "edit": "Edit",
+    "apply": "Apply",
+    "automaticButton": "Back to automatic",
+    "selection": "{{name}} ({{servers}}) → {{iface}}",
+    "done": "DNS updated. Current DNS: {{servers}}",
+    "mismatch": "DNS was written but the value read back is different. Expected: {{expected}} · Read: {{actual}}",
+    "rolledBackError": "DNS could not be applied; the previous DNS was restored.",
+    "phase": {
+      "applying": "Applying DNS…",
+      "confirmed": "DNS updated.",
+      "rollingBack": "Restoring previous DNS…",
+      "rolledBack": "Not confirmed; the previous DNS was restored.",
+      "failed": "DNS could not be changed; the previous setting is kept."
+    },
+    "addTitle": "Add your own DNS",
+    "editTitle": "Edit DNS entry",
+    "name": "Name",
+    "primary": "Primary DNS",
+    "secondary": "Secondary DNS (optional)",
+    "save": "Save",
+    "errors": {
+      "invalidName": "Enter a name (up to 64 characters).",
+      "invalidPrimary": "Enter a valid IPv4 address (e.g. 1.1.1.1).",
+      "invalidSecondary": "Enter a valid IPv4 address different from the primary.",
+      "duplicate": "This primary/secondary DNS pair is already in the list.",
+      "notFound": "Entry not found.",
+      "tooMany": "You can add up to 100 custom entries."
     }
   },
   "hosts": {

@@ -20,5 +20,7 @@ export interface Platform {
   ping(ip: string, timeoutMs: number): Promise<boolean>;
   // --- Aşağıdakiler yalnızca yetkili yardımcıdan çağrılır ---
   applyIpv4(iface: string, cfg: Ipv4Config): Promise<void>;
+  /** Yalnızca DNS sunucularını yazar; boş liste DNS'i DHCP'ye döndürür. */
+  applyDns(iface: string, dns: string[]): Promise<void>;
   flushDns(): Promise<void>;
 }

@@ -3,6 +3,7 @@
     "dashboard": "Ağ bilgi paneli",
     "portTest": "Port testi",
     "config": "Ağ yapılandırması",
+    "dns": "DNS değiştirici",
     "hosts": "Hosts yönetimi",
     "settings": "Ayarlar"
   },
@@ -147,6 +148,41 @@
     "unsupported": {
       "networkManagerMissing": "Ağ yapılandırması yalnızca NetworkManager kullanan Linux dağıtımlarında desteklenir. Bu sistemde NetworkManager çalışmıyor.",
       "generic": "Ağ yapılandırması bu sistemde desteklenmiyor."
+    }
+  },
+  "dns": {
+    "title": "DNS sunucusu",
+    "privilegeNote": "DNS değişikliği yönetici yetkisi ister. \"Uygula\"ya bastığınızda işletim sisteminin yetki penceresi açılır ve seçili DNS sunucuları arayüze yazılır; IP adresi değişmez. 15 saniye içinde onaylamazsanız önceki DNS geri yüklenir.",
+    "current": "Güncel DNS",
+    "automatic": "otomatik (DHCP)",
+    "builtin": "Hazır",
+    "edit": "Düzenle",
+    "apply": "Uygula",
+    "automaticButton": "Otomatiğe dön",
+    "selection": "{{name}} ({{servers}}) → {{iface}}",
+    "done": "DNS güncellendi. Güncel DNS: {{servers}}",
+    "mismatch": "DNS yazıldı ama okunan değer farklı. Beklenen: {{expected}} · Okunan: {{actual}}",
+    "rolledBackError": "DNS uygulanamadı; önceki DNS geri yüklendi.",
+    "phase": {
+      "applying": "DNS uygulanıyor…",
+      "confirmed": "DNS güncellendi.",
+      "rollingBack": "Önceki DNS geri yükleniyor…",
+      "rolledBack": "Onay gelmedi; önceki DNS geri yüklendi.",
+      "failed": "DNS değiştirilemedi; önceki ayar korunuyor."
+    },
+    "addTitle": "Kendi DNS kaydını ekle",
+    "editTitle": "DNS kaydını düzenle",
+    "name": "Ad",
+    "primary": "Birincil DNS",
+    "secondary": "İkincil DNS (isteğe bağlı)",
+    "save": "Kaydet",
+    "errors": {
+      "invalidName": "Bir ad girin (en fazla 64 karakter).",
+      "invalidPrimary": "Geçerli bir IPv4 adresi girin (ör. 1.1.1.1).",
+      "invalidSecondary": "Geçerli ve birincilden farklı bir IPv4 adresi girin.",
+      "duplicate": "Bu birincil/ikincil DNS çifti listede zaten var.",
+      "notFound": "Kayıt bulunamadı.",
+      "tooMany": "En fazla 100 özel kayıt eklenebilir."
     }
   },
   "hosts": {
