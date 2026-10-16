@@ -226,20 +226,20 @@ export default function PortTest() {
               <thead className="sticky top-0 bg-white text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                 <tr>
                   <th className="py-1 pr-4">{t('portTest.port')}</th>
+                  <th className="py-1 pr-4">{t('portTest.service')}</th>
                   <th className="py-1 pr-4">{t('portTest.state')}</th>
-                  <th className="py-1 pr-4">ms</th>
-                  <th className="py-1">{t('portTest.service')}</th>
+                  <th className="py-1">ms</th>
                 </tr>
               </thead>
               <tbody className="font-mono">
                 {shown.map((r) => (
                   <tr key={r.port} className="border-t border-gray-100 dark:border-gray-700">
                     <td className="py-1 pr-4">{r.port}</td>
+                    <td className="py-1 pr-4">{r.service ?? ''}</td>
                     <td className="py-1 pr-4">
                       <Chip value={t(`state.${r.state}`)} color={STATE_COLOR[r.state]} />
                     </td>
-                    <td className="py-1 pr-4 tabular-nums">{r.ms}</td>
-                    <td className="py-1">{r.service ?? ''}</td>
+                    <td className="py-1 tabular-nums">{r.ms}</td>
                   </tr>
                 ))}
               </tbody>
