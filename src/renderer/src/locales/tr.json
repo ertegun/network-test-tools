@@ -121,7 +121,7 @@
     "closedHelp": "hedef bağlantıyı reddetti",
     "filteredHelp": "yanıt yok, muhtemelen güvenlik duvarı",
     "proxyError": "Proxy hatası",
-    "proxyErrorHelp": "Tor üzerinden yanıt yok ya da zaman aşımı, port kapalı demek değildir"
+    "proxyErrorHelp": "Tor proxy'sine ulaşılamadı, port kapalı demek değildir"
   },
   "config": {
     "title": "IPv4 ve DNS ayarı",

@@ -29,18 +29,18 @@ async function fakeSocks(rep: (port: number) => number | null): Promise<SocksPro
 }
 
 describe('SOCKS5 / Tor yolu', () => {
-  it('başarılı → açık, reddedildi (5) → kapalı, diğer yanıtlar → proxy hatası', async () => {
+  it('başarılı → açık, reddedildi (5) → kapalı, diğer yanıtlar (Tor 1/6) → filtreli', async () => {
     const proxy = await fakeSocks((port) => ({ 80: 0, 81: 5, 82: 1, 83: 6 })[port] ?? 1);
     expect(await socksProbe(proxy, '192.0.2.1', 80, 1000)).toBe('open');
     expect(await socksProbe(proxy, '192.0.2.1', 81, 1000)).toBe('closed');
-    expect(await socksProbe(proxy, '192.0.2.1', 82, 1000)).toBe('proxyError');
-    expect(await socksProbe(proxy, 'example.com', 83, 1000)).toBe('proxyError');
+    expect(await socksProbe(proxy, '192.0.2.1', 82, 1000)).toBe('filtered');
+    expect(await socksProbe(proxy, 'example.com', 83, 1000)).toBe('filtered');
   });
 
-  it('zaman aşımı kapalı sayılmaz', async () => {
+  it('selamlaşmadan sonra zaman aşımı → filtreli (kapalı ya da proxy hatası değil)', async () => {
     const proxy = await fakeSocks(() => null);
     const r = await probeViaProxy(proxy, '192.0.2.1', 443, 200);
-    expect(r).toMatchObject({ port: 443, state: 'proxyError', service: 'HTTPS' });
+    expect(r).toMatchObject({ port: 443, state: 'filtered', service: 'HTTPS' });
   });
 
   it('proxy yoksa erişilemez; tarama hiçbir portu kapalı göstermez', async () => {
@@ -49,6 +49,17 @@ describe('SOCKS5 / Tor yolu', () => {
     expect(await socksReachable(proxy, 1000)).toBe(false);
     const { results } = await scanPorts({ host: '192.0.2.1', ports: [22, 80, 443], proxy, timeoutMs: 500 });
     expect(results.map((r) => r.state)).toEqual(['proxyError', 'proxyError', 'proxyError']);
+  });
+
+  it('selamlaşmayı reddeden proxy → proxy hatası', async () => {
+    const server = createServer((sock) => {
+      sock.on('error', () => {});
+      sock.once('data', () => sock.end(Buffer.from([5, 0xff]))); // 0xff: kabul edilebilir yöntem yok
+    });
+    servers.push(server);
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+    const proxy = { host: '127.0.0.1', port: (server.address() as { port: number }).port };
+    expect(await socksProbe(proxy, '192.0.2.1', 80, 1000)).toBe('proxyError');
   });
 
   it('proxy çalışıyorsa erişilebilir', async () => {

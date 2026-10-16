@@ -43,7 +43,7 @@ export interface NetworkSnapshot {
   updatedAt: string;
 }
 
-/** proxyError: proxy yolunda zaman aşımı ya da proxy hatası; "kapalı" anlamına gelmez. */
+/** proxyError: proxy'nin kendisine ulaşılamadı; "kapalı" anlamına gelmez. Proxy üzerinden yanıtsız kalan port "filtered" olur. */
 export type PortState = 'open' | 'closed' | 'filtered' | 'proxyError';
 
 /** direct: işletim sisteminin yönlendirmesi (isteğe bağlı kaynak IP); tor: yerel Tor SOCKS5 proxy'si. */

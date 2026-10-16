@@ -121,7 +121,7 @@
     "closedHelp": "the target refused the connection",
     "filteredHelp": "no response, probably a firewall",
     "proxyError": "Proxy error",
-    "proxyErrorHelp": "no response through Tor or timed out; it does not mean the port is closed"
+    "proxyErrorHelp": "the Tor proxy could not be reached; it does not mean the port is closed"
   },
   "config": {
     "title": "IPv4 and DNS settings",

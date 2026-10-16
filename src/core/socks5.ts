@@ -10,7 +10,7 @@ export interface SocksProxy {
 
 export const TOR_PROXY: SocksProxy = { host: '127.0.0.1', port: 9050 };
 
-export type SocksOutcome = Extract<PortState, 'open' | 'closed' | 'proxyError'>;
+export type SocksOutcome = Extract<PortState, 'open' | 'closed' | 'filtered' | 'proxyError'>;
 
 const GREETING = Buffer.from([5, 1, 0]); // sürüm 5, tek yöntem: kimlik doğrulamasız
 const REP_SUCCEEDED = 0;
@@ -37,12 +37,14 @@ function exchange(proxy: SocksProxy, timeoutMs: number, signal?: AbortSignal, re
       socket.destroy();
       resolve(o);
     };
+    // Selamlaşmadan sonra proxy çalışıyor demektir: yanıt gelmemesi hedefin sorunudur (Tor devresi yavaş, port filtreli).
+    const failed = () => finish(greeted ? 'filtered' : 'proxyError');
     const onAbort = () => finish('proxyError');
     signal?.addEventListener('abort', onAbort, { once: true });
     socket.setTimeout(timeoutMs);
-    socket.once('timeout', () => finish('proxyError'));
-    socket.once('error', () => finish('proxyError'));
-    socket.once('close', () => finish('proxyError'));
+    socket.once('timeout', failed);
+    socket.once('error', failed);
+    socket.once('close', failed);
     socket.on('data', (chunk: Buffer) => {
       buf = Buffer.concat([buf, chunk]);
       if (buf.length < 2) return;
@@ -55,13 +57,14 @@ function exchange(proxy: SocksProxy, timeoutMs: number, signal?: AbortSignal, re
         socket.write(request);
         return;
       }
-      finish(buf[1] === REP_SUCCEEDED ? 'open' : buf[1] === REP_CONNECTION_REFUSED ? 'closed' : 'proxyError');
+      // Tor, reddedilen bağlantı dışındaki çıkış hatalarını (genel hata 1, ulaşılamaz 3/4, zaman aşımı 6) da döner.
+      finish(buf[1] === REP_SUCCEEDED ? 'open' : buf[1] === REP_CONNECTION_REFUSED ? 'closed' : 'filtered');
     });
     socket.connect(proxy.port, proxy.host, () => socket.write(GREETING));
   });
 }
 
-/** Proxy üzerinden host:port'a bağlanır. Yalnızca hedefin reddi "kapalı"dır; zaman aşımı ve diğer proxy yanıtları "proxyError". */
+/** Proxy üzerinden host:port'a bağlanır. Yalnızca hedefin reddi "kapalı"dır; selamlaşmadan sonraki zaman aşımı ve diğer yanıtlar "filtreli", proxy'nin kendisine ulaşılamaması "proxyError". */
 export function socksProbe(proxy: SocksProxy, host: string, port: number, timeoutMs: number, signal?: AbortSignal): Promise<SocksOutcome> {
   return exchange(proxy, timeoutMs, signal, connectRequest(host, port));
 }
