@@ -8,6 +8,8 @@ import { downloadText, errorMessage, formatDateTime, formatDuration, toCsv } fro
 
 const STATE_COLOR: Record<PortState, 'green' | 'red' | 'amber'> = { open: 'green', closed: 'red', filtered: 'amber' };
 type PortSource = 'custom' | PortPresetId;
+// Ghost uyarının renkli metni koyu temada kendi zemininde AA kontrastı sağlamıyor (amber ≈2.4:1).
+const ALERT_DARK = 'dark:!text-gray-100';
 
 export function ContextBar({ ctx }: { ctx: ContextStrip }) {
   const { t } = useTranslation();
@@ -29,7 +31,7 @@ export function ContextBar({ ctx }: { ctx: ContextStrip }) {
         </Field>
       </div>
       {ctx.splitTunnel && (
-        <Alert color="amber" icon={iconWarning}>
+        <Alert color="amber" icon={iconWarning} className={ALERT_DARK}>
           {t('context.splitTunnel', { target: ctx.interfaceName, publicIface: ctx.publicIpInterface })}
         </Alert>
       )}
@@ -134,7 +136,7 @@ export default function PortTest() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Alert color="amber" icon={iconWarning}>
+      <Alert color="amber" icon={iconWarning} className={ALERT_DARK}>
         {t('common.authorizedOnly')}
       </Alert>
       {ctx && <ContextBar ctx={ctx} />}
@@ -186,11 +188,11 @@ export default function PortTest() {
           )}
         </div>
         {source === 'all' && !scanId && (
-          <Alert color="amber" icon={iconWarning} className="mt-3">
+          <Alert color="amber" icon={iconWarning} className={`mt-3 ${ALERT_DARK}`}>
             {t('portTest.allWarning', { duration: formatDuration(allEstimateSec) })}
           </Alert>
         )}
-        {error && <Alert color="red" className="mt-3">{error}</Alert>}
+        {error && <Alert color="red" className={`mt-3 ${ALERT_DARK}`}>{error}</Alert>}
         <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
           <b>{t('state.open')}</b>: {t('state.openHelp')} · <b>{t('state.closed')}</b>: {t('state.closedHelp')} · <b>{t('state.filtered')}</b>: {t('state.filteredHelp')}
         </p>

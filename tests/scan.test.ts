@@ -10,4 +10,11 @@ describe('portsFor', () => {
     expect(all[0]).toBe(1);
     expect(all[65534]).toBe(65535);
   });
+
+  it('hazır listede metin girişi doğrulanmaz, özel listede geçersiz giriş reddedilir', () => {
+    expect(portsFor({ target: 'x', preset: 'all', ports: 'abc' })).toHaveLength(65535);
+    expect(portsFor({ target: 'x', preset: 'top100', ports: '70000' })).toHaveLength(100);
+    expect(() => portsFor({ target: 'x', ports: 'abc' })).toThrow();
+    expect(() => portsFor({ target: 'x', ports: '70000' })).toThrow();
+  });
 });
