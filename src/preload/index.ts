@@ -18,6 +18,7 @@ const api: NetkitApi = {
   platform: process.platform as NetkitApi['platform'],
   network: {
     snapshot: () => invoke('network:snapshot'),
+    refreshSnapshot: () => invoke('network:refreshSnapshot'),
     refreshPublicIp: () => invoke('network:refreshPublicIp'),
     onChange: (cb) => subscribe('network:change', cb),
   },
@@ -32,6 +33,7 @@ const api: NetkitApi = {
     read: (iface) => invoke('config:read', iface),
     validate: (iface, cfg) => invoke('config:validate', iface, cfg),
     apply: (iface, cfg) => invoke('config:apply', iface, cfg),
+    currentStatus: () => invoke('config:currentStatus'),
     confirm: () => invoke('config:confirm'),
     revert: () => invoke('config:revert'),
     onStatus: (cb) => subscribe('config:status', cb),

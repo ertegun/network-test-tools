@@ -59,6 +59,13 @@ export class NetworkMonitor extends EventEmitter {
     };
   }
 
+  async refreshSnapshot(): Promise<NetworkSnapshot> {
+    await this.refreshDetails();
+    const snapshot = await this.snapshot();
+    this.emit('change', snapshot);
+    return snapshot;
+  }
+
   private async emitSnapshot() {
     this.emit('change', await this.snapshot());
   }

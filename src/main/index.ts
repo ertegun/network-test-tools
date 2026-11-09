@@ -86,6 +86,7 @@ function startApp() {
     });
 
   handle('network:snapshot', () => monitor.snapshot());
+  handle('network:refreshSnapshot', () => monitor.refreshSnapshot());
   handle('network:refreshPublicIp', async () => {
     await monitor.refreshPublicIp();
     return monitor.snapshot();
@@ -99,6 +100,7 @@ function startApp() {
   handle('config:read', (iface: string) => platform.readIpv4Config(iface));
   handle('config:validate', (iface: string, cfg: Ipv4Config) => config.validate(iface, cfg));
   handle('config:apply', (iface: string, cfg: Ipv4Config) => config.apply(iface, cfg));
+  handle('config:currentStatus', () => config.currentStatus());
   handle('config:confirm', () => config.confirm());
   handle('config:revert', () => config.revert());
   handle('config:pendingRecovery', () => config.pendingRecovery());

@@ -50,4 +50,18 @@ describe('ağ izleme (M1)', () => {
     expect(platform.interfaceDetails).toHaveBeenCalledTimes(1);
     monitor.stop();
   });
+
+  it('snapshot yenilemesi güncel DNS ayrıntılarını yayınlar', async () => {
+    const platform = fakePlatform();
+    vi.mocked(platform.interfaceDetails).mockResolvedValue({ eth0: { dns: ['1.1.1.1'] } });
+    const monitor = new NetworkMonitor(platform, async () => ({ enabled: false, serviceId: 'ipify' }), undefined, () => ({ eth0: [v4('192.168.1.5')] }));
+    const onChange = vi.fn();
+    monitor.on('change', onChange);
+
+    const snapshot = await monitor.refreshSnapshot();
+
+    expect(platform.interfaceDetails).toHaveBeenCalledTimes(1);
+    expect(snapshot.interfaces.find((iface) => iface.name === 'eth0')?.dns).toEqual(['1.1.1.1']);
+    expect(onChange).toHaveBeenCalledWith(snapshot);
+  });
 });

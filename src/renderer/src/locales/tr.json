@@ -161,6 +161,7 @@
     "connectivityFail": "Bağlantı testi başarısız: ağ geçidine ulaşılamadı.",
     "keep": "Ayarı koru",
     "revertNow": "Şimdi geri al",
+    "actionUnavailable": "İşlem tamamlanamadı. Onay süresi dolmuş olabilir.",
     "phase": {
       "applying": "Değişiklik uygulanıyor…",
       "confirmed": "Yeni ayar kalıcı hale getirildi.",

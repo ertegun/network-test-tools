@@ -172,7 +172,7 @@ describe('onaylı değişiklik tek yetkili süreçte (M7)', () => {
   it('"şimdi geri al" aynı yardımcıdan geri yükler', async () => {
     const { platform, elevate, statuses, service, sessionEnded } = setup();
     await service.apply(IFACE, WRONG);
-    await service.revert();
+    expect(await service.revert()).toBe(true);
     await sessionEnded();
     expect(statuses.at(-1)?.phase).toBe('rolledBack');
     expect(vi.mocked(platform.applyIpv4).mock.calls.at(-1)).toEqual([IFACE, PREVIOUS]);

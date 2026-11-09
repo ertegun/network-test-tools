@@ -161,6 +161,7 @@
     "connectivityFail": "Connectivity test failed: the gateway is unreachable.",
     "keep": "Keep settings",
     "revertNow": "Revert now",
+    "actionUnavailable": "The action could not be completed. The confirmation may have expired.",
     "phase": {
       "applying": "Applying the change…",
       "confirmed": "The new settings are now permanent.",

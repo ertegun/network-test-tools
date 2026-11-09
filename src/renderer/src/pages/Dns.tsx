@@ -193,7 +193,7 @@ export default function Dns({ snapshot }: { snapshot?: NetworkSnapshot }) {
         </div>
       </Card>
 
-      <KeepChangeDialog status={status} />
+      <KeepChangeDialog status={status} onStatus={setStatus} />
     </div>
   );
 }

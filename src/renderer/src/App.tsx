@@ -45,7 +45,16 @@ export default function App() {
     });
     void window.netkit.network.snapshot().then(setSnapshot);
     void window.netkit.config.pendingRecovery().then(setRecovery);
-    return window.netkit.network.onChange(setSnapshot);
+    const unsubscribeNetwork = window.netkit.network.onChange(setSnapshot);
+    const unsubscribeConfig = window.netkit.config.onStatus((status) => {
+      if (status.phase === 'confirmed' || status.phase === 'rolledBack') {
+        void window.netkit.network.refreshSnapshot().catch(() => undefined);
+      }
+    });
+    return () => {
+      unsubscribeNetwork();
+      unsubscribeConfig();
+    };
   }, []);
 
   useEffect(() => {

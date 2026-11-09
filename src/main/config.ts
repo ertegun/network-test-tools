@@ -110,10 +110,14 @@ export class ConfigService {
     return (await this.final)?.phase === 'confirmed';
   }
 
-  async revert(): Promise<void> {
-    if (!this.session || this.status?.phase !== 'awaitingConfirm') return;
+  currentStatus(): ChangeStatus | undefined {
+    return this.status;
+  }
+
+  async revert(): Promise<boolean> {
+    if (!this.session || this.status?.phase !== 'awaitingConfirm') return false;
     this.session.command('revert');
-    await this.final;
+    return (await this.final)?.phase === 'rolledBack';
   }
 
   pendingRecovery(): Promise<PendingChangeJournal | null> {

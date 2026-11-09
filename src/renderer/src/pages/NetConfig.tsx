@@ -208,7 +208,7 @@ export default function NetConfig({ snapshot }: { snapshot?: NetworkSnapshot }) 
         <p className="mt-3">{t('config.rollbackNote')}</p>
       </Dialog>
 
-      <KeepChangeDialog status={status} />
+      <KeepChangeDialog status={status} onStatus={setStatus} />
     </div>
   );
 }

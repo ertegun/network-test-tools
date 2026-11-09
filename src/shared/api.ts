@@ -34,6 +34,7 @@ export interface NetkitApi {
   platform: 'win32' | 'darwin' | 'linux';
   network: {
     snapshot(): Promise<NetworkSnapshot>;
+    refreshSnapshot(): Promise<NetworkSnapshot>;
     refreshPublicIp(): Promise<NetworkSnapshot>;
     onChange(cb: (s: NetworkSnapshot) => void): Unsubscribe;
   };
@@ -48,8 +49,9 @@ export interface NetkitApi {
     read(iface: string): Promise<Ipv4Config>;
     validate(iface: string, cfg: Ipv4Config): Promise<ConfigValidation>;
     apply(iface: string, cfg: Ipv4Config): Promise<ChangeStatus>;
+    currentStatus(): Promise<ChangeStatus | undefined>;
     confirm(): Promise<boolean>;
-    revert(): Promise<void>;
+    revert(): Promise<boolean>;
     onStatus(cb: (s: ChangeStatus) => void): Unsubscribe;
     pendingRecovery(): Promise<PendingChangeJournal | null>;
     recover(): Promise<PrivilegedResult>;
